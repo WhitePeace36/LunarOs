@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = lsb-release
+
+[Action]
+Description = Restoring Lunar branding in /etc/lsb-release...
+When = PostTransaction
+Exec = /usr/share/libalpm/scripts/lunar-branding lsb-release

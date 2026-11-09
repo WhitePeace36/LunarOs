@@ -1,0 +1,15 @@
+# Maintainer: Timon <timon2201@gmail.com>
+
+pkgname=lunar-kde-settings
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark)'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+depends=('plasma-workspace' 'breeze' 'breeze-gtk' 'kde-gtk-config')
+
+package() {
+  cp -a --no-preserve=ownership "$startdir/files/." "$pkgdir/"
+  chmod 755 "$pkgdir/usr/lib/lunar/apply-breeze-dark"
+}

@@ -1,0 +1,128 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# Lunar's installer: upstream Calamares (Qt6) at a pinned release, plus
+#   modules/   two Lunar job modules, built together with the upstream ones:
+#                pacstrap   - installs the system with pacstrap (base packages,
+#                             linux-lunar + linux-lts, tuning profile, microcode)
+#                gpudrivers - runs lunar-gpu-setup with the installer's GPU choice
+#   config/    settings.conf, module configs and the package selection
+#              (netinstall.yaml), installed to /etc/calamares
+#   scripts/   mirror/keyring setup and lunar-post-install (/etc/calamares/scripts)
+#   branding/  the "lunar" branding (/usr/share/calamares/branding/lunar)
+#   pacman.conf  pacman.conf for the installed system
+#
+# The installer is UEFI only and always installs systemd-boot.
+# ckbcomp and mkinitcpio-openswap come from the AUR (scripts/build-aur.sh).
+#
+# To update Calamares: set pkgver and _commit to the new tag, compare the
+# upstream module configs (src/modules/*/*.conf) with config/modules, reset
+# pkgrel to 1. For changes to Lunar's own files only, bump pkgrel.
+
+pkgname=lunar-calamares
+pkgver=3.3.14
+_commit=21ea803527735cfaf54fa6059e71d1ef65004864  # tag v3.3.14
+pkgrel=1
+pkgdesc='Lunar installer (Calamares)'
+arch=('x86_64')
+url='https://github.com/calamares/calamares'
+license=('GPL-3.0-or-later' 'LGPL-2.1-or-later')
+provides=('calamares')
+conflicts=('calamares' 'calamares-git')
+depends=(
+  # Calamares
+  gcc-libs
+  glibc
+  icu
+  kcoreaddons
+  kcrash
+  kpmcore
+  libpwquality
+  polkit-qt6
+  python
+  qt6-base
+  qt6-declarative
+  qt6-svg
+  yaml-cpp
+  # used by the modules at install time
+  arch-install-scripts   # pacstrap, arch-chroot
+  btrfs-progs
+  ckbcomp                # keyboard layouts (AUR)
+  cryptsetup
+  dosfstools
+  gptfdisk
+  mkinitcpio-openswap    # encrypted swap (AUR)
+  reflector
+  squashfs-tools
+  systemd                # bootctl, kernel-install
+  util-linux
+)
+makedepends=(
+  cmake
+  extra-cmake-modules
+  git
+  ninja
+  python-jsonschema
+  python-yaml
+  qt6-tools
+)
+options=('!emptydirs')
+backup=('etc/calamares/settings.conf')
+source=("calamares::git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+# Upstream modules Lunar doesn't use (other distros, QML variants, examples)
+_skip_modules=(
+  contextualprocess displaymanager dracut dracutlukscfg dummycpp dummyprocess
+  dummypython finishedq fsresizer grubcfg initramfs initramfscfg
+  interactiveterminal keyboardq license localeq mkinitfs notesqml oemid
+  openrcdmcryptcfg packagechooserq plasmalnf preservefiles rawfs removeuser
+  services-openrc summaryq tracking unpackfs unpackfsc usersq welcomeq zfs
+  zfshostid
+)
+
+prepare() {
+  cd calamares
+  # Lunar's job modules are picked up like the upstream ones
+  cp -a --no-preserve=ownership "$startdir/modules/." src/modules/
+}
+
+build() {
+  cmake -S calamares -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DWITH_QT6=ON \
+    -DWITH_PYTHON=ON \
+    -DWITH_PYBIND11=ON \
+    -DWITH_QML=ON \
+    -DBUILD_APPDATA=OFF \
+    -DBUILD_TESTING=OFF \
+    -DBUILD_SCHEMA_TESTING=OFF \
+    -DINSTALL_CONFIG=ON \
+    -DINSTALL_POLKIT=ON \
+    -DSKIP_MODULES="${_skip_modules[*]}"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  # The ISO starts the installer through lunar-install (lunar-install.desktop)
+  rm -f "$pkgdir/usr/share/applications/calamares.desktop"
+
+  # Lunar configuration (overrides the upstream defaults in /usr/share/calamares)
+  local etc="$pkgdir/etc/calamares" f
+  install -Dm644 "$startdir/config/settings.conf" "$etc/settings.conf"
+  for f in "$startdir"/config/modules/*; do
+    install -Dm644 "$f" "$etc/modules/${f##*/}"
+  done
+  for f in "$startdir"/scripts/*; do
+    install -Dm755 "$f" "$etc/scripts/${f##*/}"
+  done
+
+  install -dm755 "$pkgdir/usr/share/calamares/branding/lunar"
+  cp -r --no-preserve=ownership "$startdir/branding/lunar/." \
+    "$pkgdir/usr/share/calamares/branding/lunar/"
+
+  install -Dm644 "$startdir/pacman.conf" "$pkgdir/usr/share/lunar-calamares/pacman.conf"
+}

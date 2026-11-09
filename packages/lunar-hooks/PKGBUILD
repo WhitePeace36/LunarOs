@@ -1,0 +1,29 @@
+# Maintainer: Timon <timon2201@gmail.com>
+
+pkgname=lunar-hooks
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Lunar - pacman hooks (branding, reboot notice)'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+depends=('systemd' 'sudo')
+optdepends=('libnotify: desktop notification when a reboot is needed')
+source=('lunar-branding'
+        'lunar-branding.hook'
+        'lunar-lsb-release.hook'
+        'lunar-os-release.hook'
+        'lunar-reboot-required'
+        'lunar-reboot-required.hook')
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+
+package() {
+  local hooks="$pkgdir/usr/share/libalpm/hooks"
+  local scripts="$pkgdir/usr/share/libalpm/scripts"
+  install -Dm644 lunar-branding.hook "$hooks/lunar-branding.hook"
+  install -Dm644 lunar-lsb-release.hook "$hooks/lunar-lsb-release.hook"
+  install -Dm644 lunar-os-release.hook "$hooks/lunar-os-release.hook"
+  install -Dm644 lunar-reboot-required.hook "$hooks/lunar-reboot-required.hook"
+  install -Dm755 lunar-branding "$scripts/lunar-branding"
+  install -Dm755 lunar-reboot-required "$scripts/lunar-reboot-required"
+}

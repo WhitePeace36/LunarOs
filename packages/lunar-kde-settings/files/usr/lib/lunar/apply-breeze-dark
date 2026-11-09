@@ -1,0 +1,10 @@
+#!/bin/sh
+# Applies the Breeze Dark global theme once per user at first login, so
+# everything the global theme sets (cursor, splash, window decoration,
+# Plasma style) matches the system-wide defaults in /etc/xdg.
+marker="${XDG_STATE_HOME:-$HOME/.local/state}/lunar/breeze-dark-applied"
+[ -e "$marker" ] && exit 0
+if command -v plasma-apply-lookandfeel >/dev/null 2>&1; then
+    plasma-apply-lookandfeel --apply org.kde.breezedark.desktop >/dev/null 2>&1 || exit 0
+fi
+mkdir -p "${marker%/*}" && touch "$marker"

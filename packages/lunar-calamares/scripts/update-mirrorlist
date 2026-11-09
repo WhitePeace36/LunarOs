@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Live system, before pacstrap: pick fast, up-to-date Arch mirrors with
+# reflector. pacstrap copies the result into the new system. On failure the
+# ISO's mirrorlist stays as it is.
+
+set -u
+ml=/etc/pacman.d/mirrorlist
+if reflector --protocol https --age 12 --latest 50 --fastest 10 --sort rate \
+        --connection-timeout 3 --download-timeout 5 --save "$ml.new" 2>/dev/null \
+        && grep -q '^Server' "$ml.new"; then
+    mv "$ml.new" "$ml"
+    echo "update-mirrorlist: $(grep -c '^Server' "$ml") mirrors"
+else
+    rm -f "$ml.new"
+    echo "update-mirrorlist: reflector failed, keeping the current mirrorlist" >&2
+fi
+exit 0

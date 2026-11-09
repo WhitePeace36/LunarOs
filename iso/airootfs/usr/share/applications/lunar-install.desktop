@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Install Lunar
+Name[de]=Lunar installieren
+GenericName=System installer
+Comment=Install Lunar on this computer (needs an internet connection)
+Comment[de]=Lunar auf diesem Computer installieren (benötigt Internet)
+Exec=/usr/local/bin/lunar-install
+Icon=lunar
+Terminal=false
+Categories=System;
+Keywords=calamares;installer;

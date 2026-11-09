@@ -1,0 +1,8 @@
+##
+## Lunar repository mirrorlist
+##
+## scripts/build-packages.sh rewrites the Server line from LUNAR_REPO_URL
+## in lunar.conf, so change the URL there.
+##
+
+Server = https://github.com/WhitePeace36/lunar-repo/releases/download/x86_64

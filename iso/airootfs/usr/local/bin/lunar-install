@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Starts the Lunar installer (Calamares) as root in the live session.
+# The installer only supports UEFI systems (systemd-boot).
+
+err() {
+    if command -v kdialog >/dev/null; then
+        kdialog --title "Install Lunar" --error "$1"
+    else
+        echo "lunar-install: $1" >&2
+    fi
+    exit 1
+}
+
+[[ -d /sys/firmware/efi ]] || err "This computer was started in legacy BIOS mode.
+Lunar needs UEFI: restart, open the firmware setup (often F2, F12 or Del) and boot this USB stick in UEFI mode."
+
+log="$HOME/lunar-install.log"
+echo "lunar-install: log in $log"
+exec sudo --preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR,XDG_SESSION_TYPE,QT_QPA_PLATFORM,DISPLAY,XAUTHORITY,LANG,LC_ALL,LANGUAGE \
+    calamares -D6 >"$log" 2>&1

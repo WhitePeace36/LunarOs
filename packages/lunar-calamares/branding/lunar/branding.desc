@@ -1,0 +1,43 @@
+# Lunar installer branding (ice moon palette)
+---
+componentName:  lunar
+
+welcomeStyleCalamares:   false
+welcomeExpandingLogo:   true
+
+windowExpanding:    normal
+windowSize: 1024px,640px
+windowPlacement: center
+
+sidebar: widget
+navigation: widget
+
+strings:
+    productName:         "Lunar"
+    shortProductName:    "Lunar"
+    version:             "rolling"
+    shortVersion:        "rolling"
+    versionedName:       "Lunar"
+    shortVersionedName:  "Lunar"
+    bootloaderEntryName: "Lunar"
+    productUrl:          "https://github.com/WhitePeace36/LunarOs"
+    supportUrl:          "https://github.com/WhitePeace36/LunarOs/issues"
+    knownIssuesUrl:      "https://github.com/WhitePeace36/LunarOs/issues"
+    releaseNotesUrl:     "https://github.com/WhitePeace36/LunarOs/releases"
+
+images:
+    productIcon:         "icon.png"
+    productLogo:         "logo.png"
+    productWelcome:      "welcome.png"
+
+style:
+   SidebarBackground:        "#0B1A2E"
+   SidebarText:              "#E8F4FF"
+   SidebarTextCurrent:       "#0B1A2E"
+   SidebarBackgroundCurrent: "#7CC4FF"
+
+slideshow:               "show.qml"
+slideshowAPI: 2
+
+uploadServer :
+    type :    "none"

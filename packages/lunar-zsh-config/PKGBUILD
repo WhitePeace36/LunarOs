@@ -1,0 +1,35 @@
+# Maintainer: Timon <timon2201@gmail.com>
+
+pkgname=lunar-zsh-config
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Lunar - zsh configuration (prompt, completion menu, modern CLI aliases)'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+depends=(
+  'zsh'
+  'zsh-completions'
+  'zsh-autosuggestions'
+  'zsh-syntax-highlighting'
+  'zsh-history-substring-search'
+  'pkgfile'
+  'lsd'
+  'bat'
+  'btop'
+  'duf'
+  'dust'
+  'fzf'
+  'zoxide'
+  'ripgrep'
+  'fastfetch'
+  'noto-fonts-emoji'
+  'reflector'
+)
+backup=('etc/skel/.zshrc')
+
+package() {
+  install -Dm644 "$startdir/files/usr/share/lunar-zsh-config/lunar.zsh" \
+    "$pkgdir/usr/share/lunar-zsh-config/lunar.zsh"
+  install -Dm644 "$startdir/files/etc/skel/.zshrc" "$pkgdir/etc/skel/.zshrc"
+}

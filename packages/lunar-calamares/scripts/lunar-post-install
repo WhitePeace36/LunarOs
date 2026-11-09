@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Runs inside the new system as the last installer step (shellprocess@lunar_post).
+#   $1 = the user created by the installer
+#
+#  1. boot: the installer's kernel command line becomes /etc/lunar/cmdline-root,
+#     its kernel-install copies are removed and lunar-update-cmdline writes
+#     Lunar's own systemd-boot entries (/boot/vmlinuz-*, /boot/initramfs-*)
+#  2. firewall: ufw on, incoming blocked except LocalSend
+#  3. Flathub + Flatseal
+#  4. zsh with Lunar's .zshrc for root and the user
+#  5. /etc/resolv.conf -> systemd-resolved (last, the chroot needs DNS until then)
+
+set -uo pipefail
+user="${1:-}"
+log() { echo "lunar-post-install: $*"; }
+
+# --- 1. boot entries --------------------------------------------------------
+setup_boot() {
+    local mid="" esp=/boot
+    [[ -s /etc/machine-id ]] && mid="$(< /etc/machine-id)"
+
+    mkdir -p /etc/lunar/cmdline.d
+    if [[ -s /etc/kernel/cmdline ]]; then
+        # keep only what describes this machine; Lunar's cmdline.d adds the rest
+        tr -s '[:space:]' '\n' < /etc/kernel/cmdline | sed '/^$/d' | paste -sd ' ' \
+            > /etc/lunar/cmdline-root
+        log "root options: $(< /etc/lunar/cmdline-root)"
+    else
+        log "WARNING: /etc/kernel/cmdline missing, boot entries not written"
+        return 1
+    fi
+
+    # the installer's systemd-boot step used kernel-install; Lunar uses the
+    # images mkinitcpio keeps in /boot instead
+    if [[ -n "$mid" ]]; then
+        rm -rf "${esp:?}/$mid"
+        rm -f "$esp/loader/entries/$mid"-*.conf
+    fi
+    rm -f /etc/kernel/entry-token
+
+    mkdir -p "$esp/loader"
+    printf '%s\n' "timeout 3" "console-mode keep" "editor no" > "$esp/loader/loader.conf"
+
+    /usr/bin/lunar-update-cmdline
+}
+
+# --- 2. firewall ------------------------------------------------------------
+setup_ufw() {
+    command -v ufw >/dev/null || { log "ufw not installed, skipped"; return 0; }
+    # ufw is not running in the chroot: these only write the rule files,
+    # which ufw.service loads on boot
+    ufw --force default deny incoming >/dev/null 2>&1 || true
+    ufw --force default allow outgoing >/dev/null 2>&1 || true
+    if ufw app info LocalSend >/dev/null 2>&1; then
+        ufw allow LocalSend >/dev/null 2>&1 || true
+    else
+        ufw allow 53317/tcp >/dev/null 2>&1 || true
+        ufw allow 53317/udp >/dev/null 2>&1 || true
+    fi
+    sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+    systemctl enable ufw.service >/dev/null 2>&1 || true
+    log "ufw enabled (incoming blocked, LocalSend allowed)"
+}
+
+# --- 3. Flatpak -------------------------------------------------------------
+setup_flatpak() {
+    command -v flatpak >/dev/null || return 0
+    flatpak remote-add --system --if-not-exists flathub \
+        https://dl.flathub.org/repo/flathub.flatpakrepo || {
+        log "WARNING: could not add Flathub"; return 0; }
+    if flatpak install --system --noninteractive -y flathub com.github.tchx84.Flatseal; then
+        log "Flatseal installed"
+    else
+        log "WARNING: Flatseal not installed (install it later from Discover)"
+    fi
+}
+
+# --- 4. shells --------------------------------------------------------------
+setup_shells() {
+    local home
+    chsh -s /bin/zsh root >/dev/null 2>&1 || true
+    [[ -f /root/.zshrc ]] || install -m644 /etc/skel/.zshrc /root/.zshrc 2>/dev/null || true
+    if [[ -n "$user" ]] && id "$user" >/dev/null 2>&1; then
+        [[ "$(getent passwd "$user" | cut -d: -f7)" == /bin/zsh ]] || chsh -s /bin/zsh "$user" >/dev/null 2>&1 || true
+        home="$(getent passwd "$user" | cut -d: -f6)"
+        if [[ -d "$home" && ! -f "$home/.zshrc" && -f /etc/skel/.zshrc ]]; then
+            install -m644 -o "$user" -g "$(id -gn "$user")" /etc/skel/.zshrc "$home/.zshrc"
+        fi
+    fi
+}
+
+# --- 5. DNS -----------------------------------------------------------------
+setup_resolv() {
+    ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+}
+
+rc=0
+setup_boot || rc=1
+setup_ufw
+setup_flatpak
+setup_shells
+setup_resolv
+exit "$rc"

@@ -1,0 +1,24 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# The key files are created by scripts/make-key.sh:
+#   lunar.gpg      - exported public signing key(s)
+#   lunar-trusted  - "<fingerprint>:4:" per key
+#   lunar-revoked  - fingerprints of revoked keys (may be empty)
+
+pkgname=lunar-keyring
+pkgver=1
+pkgrel=1
+pkgdesc='Lunar - PGP keyring for the [lunar] repository'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+install="$pkgname.install"
+source=('lunar.gpg' 'lunar-trusted' 'lunar-revoked')
+sha256sums=('SKIP' 'SKIP' 'SKIP')
+
+package() {
+  local f
+  for f in lunar.gpg lunar-trusted lunar-revoked; do
+    install -Dm644 "$f" "$pkgdir/usr/share/pacman/keyrings/$f"
+  done
+}

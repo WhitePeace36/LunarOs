@@ -1,0 +1,43 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# PipewireSimpleConfigurator - GUI for PipeWire and WirePlumber settings.
+# Built from github.com/WhitePeace36/PipewireSimpleConfigurator at a pinned
+# commit (same build as the repo's own PKGBUILD, which builds a local checkout).
+#
+# To update: set _commit to the new commit, pkgver to the project() VERSION in
+# CMakeLists.txt, and reset pkgrel to 1.
+
+pkgname=pipewire-configurator-simple
+_commit=e3f9a1199e1ec8391aa921cb12dc1680a9697cce
+pkgver=2.0
+pkgrel=1
+pkgdesc='GUI tool for PipeWire and WirePlumber settings'
+arch=('x86_64')
+url='https://github.com/WhitePeace36/PipewireSimpleConfigurator'
+license=('GPL-2.0-only')
+depends=('qt6-base' 'pipewire' 'wireplumber' 'hicolor-icon-theme' 'glibc' 'gcc-libs')
+makedepends=('git' 'cmake')
+optdepends=('pipewire-pulse: settings for applications that use the PulseAudio API'
+            'pipewire-jack: settings for JACK applications')
+provides=('pipewire-simple-configurator')
+replaces=('pipewire-simple-configurator')
+conflicts=('pipewire-simple-configurator')
+source=("psc::git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+build() {
+  cmake -S psc -B build \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -Wno-dev
+  cmake --build build
+}
+
+check() {
+  QT_QPA_PLATFORM=offscreen ctest --test-dir build --output-on-failure
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 psc/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

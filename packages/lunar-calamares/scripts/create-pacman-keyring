@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Live system, before pacstrap: a fresh pacman keyring with the Arch and Lunar
+# keys. pacstrap copies it into the new system.
+
+set -euo pipefail
+pacman-key --init
+pacman-key --populate archlinux
+pacman-key --populate lunar
+# newer keyrings than the ISO's, in case keys were added or renewed since
+pacman -Sy --noconfirm --needed archlinux-keyring lunar-keyring || \
+    echo "create-pacman-keyring: could not refresh the keyrings, using the ISO's" >&2

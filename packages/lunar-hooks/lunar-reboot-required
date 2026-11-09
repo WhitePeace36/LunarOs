@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Tells the user (in the terminal and on the desktop) that an update of the
+# kernel, systemd, glibc, the graphics stack or firmware takes effect only
+# after a reboot.
+mapfile -t targets
+[[ ${#targets[@]} -gt 0 ]] || exit 0
+
+echo "==> A reboot is needed to use the updated kernel, drivers or system libraries."
+
+command -v notify-send >/dev/null || exit 0
+# notify every logged-in graphical user
+while read -r _session uid user _seat _; do
+    [[ -n "$uid" && "$uid" -ge 1000 ]] || continue
+    bus="/run/user/$uid/bus"
+    [[ -S "$bus" ]] || continue
+    sudo -u "$user" DBUS_SESSION_BUS_ADDRESS="unix:path=$bus" \
+        notify-send --app-name="Lunar Update" --icon=system-reboot \
+        "Reboot needed" "Updated system components are used after the next restart." \
+        >/dev/null 2>&1 || true
+done < <(loginctl list-sessions --no-legend 2>/dev/null)
+exit 0

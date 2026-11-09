@@ -1,0 +1,18 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/lib/modules/*/vmlinuz
+Target = usr/lib/systemd/systemd
+Target = usr/lib/libc.so.6
+Target = usr/lib/libdrm.so*
+Target = usr/lib/libGLX_mesa.so*
+Target = usr/lib/libnvidia-glcore.so*
+Target = usr/lib/firmware/*
+Target = usr/lib/ld-linux-x86-64.so.2
+
+[Action]
+Description = Checking whether a reboot is needed...
+When = PostTransaction
+Exec = /usr/share/libalpm/scripts/lunar-reboot-required
+NeedsTargets

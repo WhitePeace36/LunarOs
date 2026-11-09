@@ -1,0 +1,46 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# ananicy-cpp from Timon's fork (fork/rename/scan fixes that upstream did not
+# take). Replaces the ananicy-cpp package from the Arch repos.
+# To update: set _commit to the new commit of the fork and bump pkgrel to 1.
+
+pkgname=ananicy-cpp-lunar
+_commit=de83a4ccb25f14acab8e90a48e5a2ea4a7aa9edf
+pkgver=1.2.0.r447.gde83a4c
+pkgrel=1
+pkgdesc='Ananicy rewritten in C++ - Lunar build of the WhitePeace36 fork'
+arch=('x86_64')
+url='https://github.com/WhitePeace36/ananicy-cpp'
+license=('GPL-3.0-or-later')
+depends=('fmt' 'spdlog' 'systemd-libs' 'libelf' 'zlib' 'libbpf')
+makedepends=('git' 'cmake' 'ninja' 'clang' 'nlohmann-json' 'bpf')
+optdepends=('lunar-ananicy-rules: rules tuned for the Elara scheduler')
+provides=("ananicy-cpp=${pkgver%%.r*}")
+conflicts=('ananicy-cpp' 'ananicy-cpp-wp')
+replaces=('ananicy-cpp')
+source=("ananicy-cpp::git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd ananicy-cpp
+  printf '1.2.0.r%s.g%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+build() {
+  cmake -S ananicy-cpp -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DUSE_EXTERNAL_SPDLOG=ON \
+    -DUSE_EXTERNAL_JSON=ON \
+    -DUSE_EXTERNAL_FMTLIB=ON \
+    -DENABLE_SYSTEMD=ON \
+    -DUSE_BPF_PROC_IMPL=ON \
+    -DBPF_BUILD_LIBBPF=OFF \
+    -DVERSION="$pkgver"
+  cmake --build build --target ananicy-cpp
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build --component Runtime
+  install -dm755 "$pkgdir/etc/ananicy.d"
+}

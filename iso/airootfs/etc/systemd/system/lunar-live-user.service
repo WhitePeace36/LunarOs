@@ -1,0 +1,12 @@
+[Unit]
+Description=Create the Lunar live user
+After=systemd-sysusers.service systemd-tmpfiles-setup.service
+Before=display-manager.service systemd-user-sessions.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/lunar-live-user
+
+[Install]
+WantedBy=multi-user.target

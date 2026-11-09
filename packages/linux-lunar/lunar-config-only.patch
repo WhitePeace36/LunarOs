@@ -1,0 +1,48 @@
+diff -ru a/lunar-config/lib.sh b/lunar-config/lib.sh
+--- a/lunar-config/lib.sh
++++ b/lunar-config/lib.sh
+@@ -523,8 +523,10 @@
+ 	lunar_check_config
+ 	make -s kernelrelease > version
+ 	_l_msg2 "Kernel release: $(<version)"
+-	cp .config "$where/lunar-config/last-config-$(<version)"
+-	_l_msg2 "Final config saved as lunar-config/last-config-$(<version)"
++	# best effort: the folder is read-only in a clean chroot (makechrootpkg)
++	if cp .config "$where/lunar-config/last-config-$(<version)" 2>/dev/null; then
++		_l_msg2 "Final config saved as lunar-config/last-config-$(<version)"
++	fi
+ }
+ 
+ # Warn when Kconfig silently dropped a choice (missing dependency etc.).
+diff -ru a/lunar.sh b/lunar.sh
+--- a/lunar.sh
++++ b/lunar.sh
+@@ -4,6 +4,8 @@
+ #   ./lunar.sh               resolve options, build and install (makepkg -si)
+ #   ./lunar.sh --build-only  build the packages, do not install them
+ #   ./lunar.sh --prepare     only download, patch and configure (inspect src/)
++#   ./lunar.sh --config-only only resolve the options into .lunar-build.cfg, so
++#                            makepkg / makechrootpkg can build the PKGBUILD directly
+ #   ./lunar.sh --list        show kernel versions and the patch sets available
+ #   ./lunar.sh --clean       remove build files (src/, pkg/, packages, caches)
+ #   Anything after "--" is passed to makepkg, e.g. ./lunar.sh -- --skippgpcheck
+@@ -75,6 +77,7 @@
+ 	case "$1" in
+ 		--build-only) _mode="build" ;;
+ 		--prepare)    _mode="prepare" ;;
++		--config-only) _mode="config" ;;
+ 		--list)       _mode="list" ;;
+ 		--clean)      _mode="clean" ;;
+ 		-h|--help)    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+@@ -211,6 +214,11 @@
+ _l_msg2 "defaults: dirty_bytes=${_default_dirty_bytes:-kernel} dirty_background_bytes=${_default_dirty_background_bytes:-kernel} dirty_writeback_centisecs=${_default_dirty_writeback_centisecs:-kernel} dirty_expire_centisecs=${_default_dirty_expire_centisecs:-kernel} max_map_count=${_default_max_map_count:-kernel} split_lock_detect=${_default_split_lock_detect:-kernel} split_lock_mitigate=${_default_split_lock_mitigate:-kernel}"
+ _l_msg2 "lunar patches: ${#_lunar_patches[@]}, user patches: $(( ${#_lunar_userreverts[@]} + ${#_lunar_userpatches[@]} ))"
+ 
++if [[ "$_mode" == config ]]; then
++	_l_msg "Wrote .lunar-build.cfg; build with makepkg or makechrootpkg in this folder"
++	exit 0
++fi
++
+ # ------------------------------------------------------------ makepkg -------
+ 
+ mkdir -p "$_lunar_srcdest"

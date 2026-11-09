@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Writes Lunar's identity into the files that base packages overwrite on
+# upgrade (/etc/os-release from filesystem, /etc/lsb-release from lsb-release).
+
+update_lsb_release() {
+    [ -f /etc/lsb-release ] || return 0
+    sed -i /etc/lsb-release \
+        -e 's|^DISTRIB_ID=.*$|DISTRIB_ID=lunar|' \
+        -e 's|^DISTRIB_DESCRIPTION=.*$|DISTRIB_DESCRIPTION=\"Lunar\"|'
+}
+
+update_os_release() {
+    local os_release="/etc/os-release"
+    [ -f "$os_release" ] || return 0
+
+    # /etc/os-release is usually a symlink to /usr/lib/os-release; edit the target
+    os_release="$(readlink -f "$os_release")"
+
+    sed -i "$os_release" \
+        -e 's|^NAME=.*$|NAME=\"Lunar\"|' \
+        -e 's|^PRETTY_NAME=.*$|PRETTY_NAME=\"Lunar\"|' \
+        -e 's|^ID=.*$|ID=lunar|' \
+        -e 's|^ID_LIKE=.*$|ID_LIKE=\"arch\"|' \
+        -e 's|^ANSI_COLOR=.*$|ANSI_COLOR=\"38;2;124;196;255\"|' \
+        -e 's|^HOME_URL=.*$|HOME_URL=\"https://github.com/WhitePeace36/LunarOs\"|' \
+        -e 's|^DOCUMENTATION_URL=.*$|DOCUMENTATION_URL=\"https://github.com/WhitePeace36/LunarOs\"|' \
+        -e 's|^SUPPORT_URL=.*$|SUPPORT_URL=\"https://github.com/WhitePeace36/LunarOs/issues\"|' \
+        -e 's|^BUG_REPORT_URL=.*$|BUG_REPORT_URL=\"https://github.com/WhitePeace36/LunarOs/issues\"|' \
+        -e 's|^LOGO=.*$|LOGO=lunar|'
+
+    if ! grep -q "^ID_LIKE=" "$os_release" && grep -q "^ID=" "$os_release"; then
+        sed -i "$os_release" -e '/^ID=/a \ID_LIKE="arch"'
+    fi
+}
+
+update_issues() {
+    local f
+    for f in /etc/issue /usr/share/factory/etc/issue; do
+        [ -f "$f" ] && sed -i -e 's|Arch Linux|Lunar|g' "$f"
+    done
+}
+
+case "$1" in
+    os-release) update_os_release ;;
+    lsb-release) update_lsb_release ;;
+    *)
+        update_os_release
+        update_lsb_release
+        update_issues
+        ;;
+esac

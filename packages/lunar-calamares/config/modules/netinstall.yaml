@@ -1,0 +1,214 @@
+# Lunar: software installed on top of the base system (installer page
+# "Additional software"). Groups marked critical can't be unticked.
+# Packages marked [lunar] are built from the AUR into the [lunar] repo
+# (packages/aur-packages.txt).
+
+# Lunar's own packages (settings, Elara, ananicy-cpp + rules, the two
+# configurators, zsh and KDE setup) are installed by the pacstrap step
+# (pacstrap.conf), before the user is created.
+
+- name: "KDE Plasma"
+  description: "Plasma desktop with Plasma Login Manager and the KDE core apps"
+  selected: true
+  critical: true
+  packages:
+    - plasma-desktop
+    - plasma-login-manager
+    - plasma-nm
+    - plasma-pa
+    - plasma-firewall
+    - plasma-systemmonitor
+    - plasma-thunderbolt
+    - plasma-browser-integration
+    - kdeplasma-addons
+    - powerdevil
+    - bluedevil
+    - kscreen
+    - kwallet-pam
+    - kwalletmanager
+    - kde-gtk-config
+    - breeze-gtk
+    - xsettingsd
+    - kinfocenter
+    - kio-admin
+    - plymouth-kcm
+    - flatpak-kcm
+    - discover
+    - konsole
+    - dolphin
+    - ark
+    - kate
+    - kcalc
+    - spectacle
+    - gwenview
+    - haruna
+    - filelight
+    - partitionmanager
+    - ffmpegthumbs
+    - kdegraphics-thumbnailers
+    - kdialog
+
+- name: "Hardware and system"
+  description: "Network, Wi-Fi, Bluetooth, sound, firewall, power and firmware"
+  selected: true
+  critical: true
+  subgroups:
+    - name: "Network"
+      selected: true
+      packages:
+        - networkmanager
+        - networkmanager-openvpn
+        - iwd
+        - wpa_supplicant
+        - modemmanager
+        - usb_modeswitch
+        - wireless-regdb
+        - avahi
+        - nss-mdns
+        - dnsmasq
+        - bind
+        - ethtool
+        - net-tools
+    - name: "Firewall"
+      description: "ufw: incoming connections blocked except LocalSend"
+      selected: true
+      packages:
+        - ufw
+    - name: "Bluetooth"
+      selected: true
+      packages:
+        - bluez
+        - bluez-utils
+        - bluez-obex
+    - name: "Sound"
+      selected: true
+      packages:
+        - pipewire
+        - pipewire-alsa
+        - pipewire-jack
+        - pipewire-pulse
+        - wireplumber
+        - alsa-utils
+        - alsa-firmware
+        - pavucontrol
+        - realtime-privileges
+    - name: "Power and firmware"
+      selected: true
+      packages:
+        - power-profiles-daemon
+        - upower
+        - cpupower
+        - fwupd
+        - hdparm
+        - smartmontools
+        - mesa-utils
+        - vulkan-tools
+
+- name: "Command line"
+  description: "Editors and everyday tools"
+  selected: true
+  critical: true
+  packages:
+    - git
+    - nano
+    - nano-syntax-highlighting
+    - micro
+    - most
+    - vim
+    - wget
+    - rsync
+    - openssh
+    - btop
+    - duf
+    - dust
+    - lsd
+    - bat
+    - ripgrep
+    - fd
+    - fzf
+    - zoxide
+    - fastfetch
+    - pkgfile
+    - pacman-contrib
+    - bash-completion
+    - unzip
+    - unrar
+    - 7zip
+
+- name: "Fonts and media"
+  description: "Fonts (incl. a Nerd Font for the prompt), codecs and thumbnails"
+  selected: true
+  critical: true
+  packages:
+    - noto-fonts
+    - noto-fonts-cjk
+    - noto-fonts-emoji
+    - ttf-dejavu
+    - ttf-liberation
+    - ttf-jetbrains-mono-nerd
+    - gst-libav
+    - gst-plugin-pipewire
+    - gst-plugins-good
+    - gst-plugins-bad
+    - gst-plugins-ugly
+    - ffmpegthumbnailer
+    - xdg-user-dirs
+    - xdg-utils
+
+- name: "Gaming"
+  description: "Steam, Lutris, ProtonUp-Qt, MangoHud, gamescope"
+  selected: true
+  packages:
+    - steam
+    - lutris
+    - protonup-qt          # [lunar]
+    - mangohud
+    - lib32-mangohud
+    - gamescope
+
+- name: "Internet"
+  description: "Brave, LibreWolf and LocalSend"
+  selected: true
+  packages:
+    - brave-bin            # [lunar]
+    - librewolf-bin        # [lunar]
+    - localsend-bin        # [lunar]
+
+- name: "Remote desktop"
+  description: "Remmina with RDP (FreeRDP) and VNC"
+  selected: true
+  packages:
+    - remmina
+    - freerdp
+    - libvncserver
+
+- name: "Office and audio"
+  description: "OnlyOffice and EasyEffects"
+  selected: true
+  packages:
+    - onlyoffice-bin       # [lunar]
+    - easyeffects
+
+- name: "Printing and scanning"
+  description: "CUPS with HP drivers, driverless network/USB printers and scanners"
+  selected: true
+  packages:
+    - cups
+    - cups-pdf
+    - cups-filters
+    - ghostscript
+    - hplip
+    - print-manager
+    - system-config-printer
+    - sane
+    - sane-airscan
+    - ipp-usb
+    - simple-scan
+
+- name: "Utilities"
+  description: "Flatpak, AppImage integration and a USB image writer"
+  selected: true
+  packages:
+    - flatpak
+    - appimagelauncher     # [lunar]
+    - balena-etcher        # [lunar]

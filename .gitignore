@@ -1,0 +1,22 @@
+# build output
+/build/
+/repo/
+/iso/out/
+/iso/build/
+/iso/archiso/airootfs/etc/pacman.d/lunar-mirrorlist
+/iso/archiso/packages.x86_64
+
+# makepkg output
+packages/*/src/
+packages/*/pkg/
+packages/*/*.pkg.tar.*
+packages/*/*.log
+packages/*/ananicy-cpp/
+packages/*/elara/
+packages/*/psc/
+packages/*/calamares/
+
+# never commit a secret key
+*.asc
+*.key
+__pycache__/

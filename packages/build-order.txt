@@ -1,0 +1,18 @@
+# Order scripts/build-packages.sh builds in when called without names.
+# A package must come after every Lunar package it depends on; folders not
+# listed here are built last, alphabetically. AUR packages
+# (scripts/build-aur.sh) must be built before this list.
+
+lunar-keyring
+lunar-mirrorlist
+lunar-hooks
+linux-lunar
+ananicy-cpp-lunar
+lunar-ananicy-rules
+elara
+pipewire-configurator-simple
+ananicy-configurator
+lunar-settings
+lunar-kde-settings
+lunar-zsh-config
+lunar-calamares

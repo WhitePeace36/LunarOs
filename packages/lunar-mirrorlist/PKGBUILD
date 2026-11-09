@@ -1,0 +1,16 @@
+# Maintainer: Timon <timon2201@gmail.com>
+
+pkgname=lunar-mirrorlist
+pkgver=1
+pkgrel=1
+pkgdesc='Lunar - mirror list for the [lunar] repository'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+backup=('etc/pacman.d/lunar-mirrorlist')
+source=('lunar-mirrorlist')
+sha256sums=('SKIP')
+
+package() {
+  install -Dm644 lunar-mirrorlist "$pkgdir/etc/pacman.d/lunar-mirrorlist"
+}

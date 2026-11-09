@@ -1,0 +1,58 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# Elara - sched_ext scheduler that follows the nice values ananicy-cpp sets.
+# Built from github.com/WhitePeace36/Elara at a pinned commit, with the
+# repo's own CMake install rules (binary, elara.service, elara-hook) and
+# its committed include/vmlinux.h (Linux 7.3+ types for the BPF part).
+# To build against another vmlinux.h, set ELARA_VMLINUX_H=/path/to/vmlinux.h.
+#
+# To update: set _commit to the new commit and reset pkgrel to 1.
+
+pkgname=elara
+_commit=24804f0a92d02d5fa532b36a3016d7b865a8ac6c
+pkgver=0.r0.g24804f0
+pkgrel=1
+pkgdesc='sched_ext CPU scheduler, tuned by nice values, for stable frame times'
+arch=('x86_64')
+url='https://github.com/WhitePeace36/Elara'
+license=('GPL-2.0-only')
+depends=('libbpf' 'glibc' 'gcc-libs')
+makedepends=('git' 'cmake' 'clang' 'lld' 'bpf' 'pkgconf')
+optdepends=('ananicy-cpp: sets the nice values Elara schedules by')
+provides=('scx-elara')
+replaces=('scx-elara')
+conflicts=('scx-elara' 'scx-manager')
+options=('!lto' '!debug')
+install=elara.install
+source=("elara::git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd elara
+  printf '0.r%s.g%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+prepare() {
+  cd elara
+  if [[ -n "${ELARA_VMLINUX_H:-}" ]]; then
+    echo "==> vmlinux.h from \$ELARA_VMLINUX_H"
+    cp "$ELARA_VMLINUX_H" include/vmlinux.h
+  fi
+  [[ -s include/vmlinux.h ]] || { echo "==> ERROR: include/vmlinux.h missing in the Elara repo" >&2; return 1; }
+}
+
+build() {
+  cmake -S elara -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DELARA_NATIVE_ARCH=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 elara/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 elara/README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

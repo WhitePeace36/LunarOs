@@ -1,0 +1,23 @@
+# Packages Lunar needs that Arch's repositories don't carry.
+# scripts/build-aur.sh builds each from the AUR into the [lunar] repo, and
+# skips any that Arch's repos have by now. One AUR package BASE per line
+# (for split packages that is the AUR repo name, e.g. nvidia-580xx-utils
+# also builds nvidia-580xx-dkms). Order matters: a package that needs
+# another one from this list comes after it.
+
+# --- installer dependencies (lunar-calamares: keyboard layouts, encrypted swap) ---
+ckbcomp
+mkinitcpio-openswap
+
+# --- NVIDIA 580 legacy driver (GTX 750 - GTX 10xx, Volta) ---
+nvidia-580xx-utils
+lib32-nvidia-580xx-utils
+
+# --- default apps ---
+brave-bin
+librewolf-bin
+onlyoffice-bin
+localsend-bin
+appimagelauncher
+balena-etcher
+protonup-qt

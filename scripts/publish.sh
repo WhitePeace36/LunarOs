@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Upload repo/x86_64 to the GitHub release that LUNAR_REPO_URL points at
+# (https://github.com/<owner>/<repo>/releases/download/<tag>).
+#
+#   scripts/publish.sh
+#
+# Needs the GitHub CLI (github-cli) logged in with `gh auth login`.
+# The repo database symlinks (lunar.db, lunar.files) are uploaded as real
+# files, since release assets can't be symlinks.
+
+. "$(dirname "$0")/common.sh"
+need github-cli gh
+
+[[ "$LUNAR_REPO_URL" =~ ^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/?$ ]] \
+    || die "LUNAR_REPO_URL is not a GitHub release URL: $LUNAR_REPO_URL"
+gh_repo="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+tag="${BASH_REMATCH[3]}"
+
+[[ -f "$DB_FILE" ]] || die "no repo database at $DB_FILE - build packages first"
+
+if ! gh release view "$tag" -R "$gh_repo" >/dev/null 2>&1; then
+    msg "Creating release $tag in $gh_repo"
+    gh release create "$tag" -R "$gh_repo" --title "Lunar repository ($tag)" \
+        --notes "pacman repository for Lunar. Server = $LUNAR_REPO_URL"
+fi
+
+stage="$BUILD_DIR/publish"
+rm -rf "$stage"; mkdir -p "$stage"
+cp -L "$REPO_DIR"/* "$stage/"
+
+msg "Uploading $(find "$stage" -type f | wc -l) files to $gh_repo ($tag)"
+gh release upload "$tag" -R "$gh_repo" --clobber "$stage"/*
+
+# drop assets that are no longer in the repo (old package versions)
+mapfile -t current < <(cd "$stage" && ls -1)
+while read -r asset; do
+    [[ " ${current[*]} " == *" $asset "* ]] && continue
+    msg2 "deleting old asset $asset"
+    gh release delete-asset "$tag" "$asset" -R "$gh_repo" -y
+done < <(gh release view "$tag" -R "$gh_repo" --json assets --jq '.assets[].name')
+
+msg "Published: $LUNAR_REPO_URL"

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Lunar: apply Breeze Dark
+Exec=/usr/lib/lunar/apply-breeze-dark
+OnlyShowIn=KDE;
+NoDisplay=true
+X-KDE-autostart-phase=1

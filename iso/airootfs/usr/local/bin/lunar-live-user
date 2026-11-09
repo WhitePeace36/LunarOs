@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Creates the live session user "liveuser" (no password, sudo without
+# password) before Plasma Login Manager logs it in automatically.
+set -eu
+user=liveuser
+id "$user" >/dev/null 2>&1 && exit 0
+groups=()
+for g in wheel audio video input storage network power lp scanner rfkill sys; do
+    getent group "$g" >/dev/null && groups+=("$g")
+done
+useradd -m -U -s /usr/bin/zsh -c "Live user" \
+    -G "$(IFS=,; echo "${groups[*]}")" "$user"
+passwd -d "$user" >/dev/null
+# installer launcher on the desktop, already trusted
+desk="/home/$user/Desktop"
+install -d -o "$user" -g "$user" "$desk"
+install -m755 -o "$user" -g "$user" /usr/share/applications/lunar-install.desktop "$desk/"

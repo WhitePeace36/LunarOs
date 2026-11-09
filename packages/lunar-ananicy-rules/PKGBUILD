@@ -1,0 +1,43 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# Timon's ananicy-cpp rules for Lunar: everything under ananicy.d/ in
+# github.com/WhitePeace36/ananicy-rules goes to /etc/ananicy.d/ with the same
+# layout (ananicy.conf, 99-types.types, 99-rules/*.rules).
+#
+# To update: push to the rules repo, set _commit to the new commit, reset
+# pkgrel to 1, then scripts/build-packages.sh lunar-ananicy-rules.
+
+pkgname=lunar-ananicy-rules
+_commit=c3ef34fa90a0356d98795318c8c8f67cd0a79d5c
+pkgver=r0
+pkgrel=1
+pkgdesc='Lunar - ananicy-cpp rules tuned for the Elara scheduler'
+arch=('any')
+url='https://github.com/WhitePeace36/ananicy-rules'
+license=('GPL-2.0-only')
+makedepends=('git')
+provides=('ananicy-rules')
+conflicts=('ananicy-rules' 'ananicy-rules-git' 'ananicy-cpp-rules' 'ananicy-rules-custom')
+backup=('etc/ananicy.d/ananicy.conf')
+source=("rules::git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd rules
+  printf 'r%s.g%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+check() {
+  [ -f rules/ananicy.d/ananicy.conf ] || { echo "ananicy.d/ananicy.conf missing in the rules repo" >&2; return 1; }
+}
+
+package() {
+  local src=rules/ananicy.d dest="$pkgdir/etc/ananicy.d" f
+  install -dm755 "$dest"
+  while IFS= read -r -d '' f; do
+    f="${f#"$src"/}"
+    [ "$f" = LICENSE ] && continue
+    install -Dm644 "$src/$f" "$dest/$f"
+  done < <(find "$src" -type f -print0)
+  install -Dm644 "$src/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
