@@ -1,7 +1,13 @@
-# LunarOs
+<p align="center">
+  <img src="branding/lunar-logo.svg" alt="Lunar logo" width="160">
+</p>
 
-KDE Plasma on Arch Linux, with the linux-lunar kernel, the Elara sched_ext
-scheduler, ananicy-cpp (fork), and settings tuned for desktop gaming.
+<h1 align="center">LunarOs</h1>
+
+<p align="center">
+  KDE Plasma on Arch Linux, with the linux-lunar kernel, the Elara sched_ext
+  scheduler, ananicy-cpp (fork), and settings tuned for desktop gaming.
+</p>
 
 Lunar uses Arch's repositories (core, extra, multilib) for everything it
 doesn't change. Its own packages, plus the AUR packages it needs, live in a

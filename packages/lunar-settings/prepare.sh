@@ -12,7 +12,7 @@
 set -euo pipefail
 
 _repo="https://github.com/WhitePeace36/lunar-settings.git"
-_commit=""
+_commit="1cdecf490d33ec8a6c1bd718cca941650a32223a"
 
 work="${1:?usage: prepare.sh <work-dir>}"
 src="$work/lunar-settings"
