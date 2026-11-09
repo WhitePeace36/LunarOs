@@ -31,12 +31,12 @@ win.
 | Package | Purpose |
 |---|---|
 | `linux-lunar` | Default kernel, built from `WhitePeace36/linux-lunar` (see below) |
-| `lunar-settings` | All system settings, from your repo `WhitePeace36/lunar-settings`: sysctl, THP/tmpfiles, kernel parameters (C1 only, performance governor, ...), zram, I/O schedulers, SATA/HDD rules, AMD GPU max power + fixed VRAM clock, limits, mDNS, `lunar-update-cmdline`, `lunar-sdboot-update`, `lunar-gpu-setup` |
+| `lunar-settings` | All system settings, built from `WhitePeace36/lunar-settings`: sysctl, THP/tmpfiles, kernel parameters (C1 only, performance governor, ...), zram, I/O schedulers, SATA/HDD rules, AMD GPU max power + fixed VRAM clock, limits, mDNS, `lunar-update-cmdline`, `lunar-sdboot-update`, `lunar-gpu-setup` |
 | `lunar-hooks` | pacman hooks: Lunar branding in `/etc/os-release`, "reboot required" notice after kernel/systemd updates |
 | `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login) |
 | `lunar-zsh-config` | Prompt `user@host:path(branch⚡) »`, grid completion menu, `lsd`/`bat`/… aliases |
 | `ananicy-cpp-lunar` | Build of the WhitePeace36 ananicy-cpp fork (replaces Arch's `ananicy-cpp`) |
-| `lunar-ananicy-rules` | Your rules repo `WhitePeace36/ananicy-rules` |
+| `lunar-ananicy-rules` | ananicy-cpp rules from `WhitePeace36/ananicy-rules` |
 | `elara` | Elara scheduler (`WhitePeace36/Elara`), enabled by default; conflicts with `scx-manager` |
 | `pipewire-configurator-simple` | PipeWire GUI (`WhitePeace36/PipewireSimpleConfigurator`) |
 | `ananicy-configurator` | GUI for the ananicy-cpp rules (`WhitePeace36/AnanicyConfigurator`) |
@@ -82,7 +82,7 @@ AMD/Intel Mesa. Laptops with two GPUs get both plus `nvidia-prime`.
 ### Kernel parameters
 
 `lunar-update-cmdline` collects `/usr/lib/lunar/cmdline.d/*.conf` (from the
-packages) and `/etc/lunar/cmdline.d/*.conf` (your overrides; a same-named
+packages) and `/etc/lunar/cmdline.d/*.conf` (local overrides; a same-named
 file in `/etc` replaces the one in `/usr/lib`) and writes `/etc/kernel/cmdline` = `/etc/lunar/cmdline-root` (root=, LUKS,
 subvolume, resume; written once by the installer) + those parameters. Then
 `lunar-sdboot-update` writes the systemd-boot entries.
@@ -94,8 +94,8 @@ subvolume, resume; written once by the installer) + those parameters. Then
 `lunar-sdboot-update` writes `/boot/loader/entries/lunar-<kernel>.conf` (and
 `-fallback.conf`) for every installed kernel, using the images mkinitcpio
 keeps in `/boot` (`vmlinuz-<kernel>`, `initramfs-<kernel>.img`), removes
-entries of removed kernels and makes `linux-lunar` the default unless you
-picked another default. A pacman hook runs it after every kernel install,
+entries of removed kernels and makes `linux-lunar` the default unless another
+default is set in `loader.conf`. A pacman hook runs it after every kernel install,
 upgrade or removal; `systemd-boot-update.service` keeps the boot loader itself
 current. The ESP must be mounted at `/boot` (the installer does that).
 
@@ -125,11 +125,11 @@ own (`lunar-update-cmdline`).
 | `WhitePeace36/lunar-repo` | only the release with the built packages (`[lunar]`) | `scripts/publish.sh` |
 | `WhitePeace36/linux-lunar`, `ananicy-cpp`, `Elara`, `PipewireSimpleConfigurator`, `AnanicyConfigurator` | the projects' own source; no Lunar files needed in them | their PKGBUILD here pins a commit |
 | `WhitePeace36/lunar-settings` | sysctl, tmpfiles, cmdline, udev, zram, ... (`files/`) | `packages/lunar-settings/prepare.sh` |
-| `WhitePeace36/ananicy-rules` | your rules in `ananicy.d/` (same layout as `/etc/ananicy.d`) | `packages/lunar-ananicy-rules` |
+| `WhitePeace36/ananicy-rules` | the rules in `ananicy.d/` (same layout as `/etc/ananicy.d`) | `packages/lunar-ananicy-rules` |
 
 Every Lunar package is a folder under `packages/` with the PKGBUILD and the
 files it installs; no build output is committed (`.gitignore`). A package for
-one of your projects only pins a commit, so a release is: push to the
+one of these projects only pins a commit, so a release is: push to the
 project, change `_commit` here, rebuild that package, publish.
 
 ## Building
@@ -142,8 +142,8 @@ gpg --locate-keys torvalds@kernel.org gregkh@kernel.org   # kernel tarball signa
 scripts/make-key.sh          # creates the signing key, fills packages/lunar-keyring
 ```
 
-Create `WhitePeace36/lunar-repo` on GitHub (empty). If you use another name,
-change `LUNAR_REPO_URL` in `lunar.conf`.
+Create the public repo `WhitePeace36/lunar-repo` on GitHub (empty). For another
+name, change `LUNAR_REPO_URL` in `lunar.conf`.
 
 Then, in this order (later steps need earlier packages):
 
@@ -157,40 +157,19 @@ scripts/build-iso.sh         # ISO in iso/out/
 The kernel build takes a while (30-90 minutes depending on the CPU). Test the
 ISO in a VM before real hardware, e.g. with GNOME Boxes or
 `qemu-system-x86_64 -enable-kvm -m 8G -cdrom iso/out/lunar-*.iso -bios /usr/share/edk2/x64/OVMF.4m.fd`
-(UEFI firmware is required).
+(UEFI firmware is required). Secure Boot must be off: the ISO's boot loader,
+systemd-boot and linux-lunar aren't signed.
 
 ### Updating
 
 * Kernel: `_version` in `packages/linux-lunar/lunar-distro.cfg` and/or `_commit` in its `prepare.sh`, then `scripts/build-packages.sh linux-lunar`.
-* Your other projects: `_commit` in their PKGBUILD, then `scripts/build-packages.sh <name>`.
+* Elara, ananicy-cpp and the two configurators: `_commit` in their PKGBUILD, then `scripts/build-packages.sh <name>`.
 * Settings (sysctl, tmpfiles, cmdline, ...): edit them in the `lunar-settings` repo, raise `pkgver` there, push, set `_commit` in `packages/lunar-settings/prepare.sh`, then `scripts/build-packages.sh lunar-settings`.
 * Ananicy rules: push to `WhitePeace36/ananicy-rules`, set `_commit` in `packages/lunar-ananicy-rules/PKGBUILD`, rebuild.
 * Calamares: `pkgver`/`_commit` in `packages/lunar-calamares/PKGBUILD` (a release tag), compare upstream's module configs with `config/modules`.
 * ISO profile: compare `iso/` with a newer archiso `configs/releng` now and then.
 * AUR packages: re-run `scripts/build-aur.sh`; it rebuilds only what changed.
 * `scripts/publish.sh` after every build.
-
-## Before the first release - things to check
-
-These depend on details I couldn't test without an Arch machine:
-
-1. **Your ananicy rules repo:** `ananicy.d/ananicy.conf` must exist in it
-   (the package checks for it).
-2. **Elara build:** uses the `include/vmlinux.h` committed in the Elara repo
-   (regenerate it with `create_vmlinux.h.sh` after big kernel changes).
-3. **AUR names:** `build-aur.sh` reports what it built and what it found in
-   Arch's repos. If a name in `aur-packages.txt` doesn't exist in the AUR
-   (split packages are listed by their base name), fix it there.
-4. **In a VM (UEFI):** systemd-boot default entry is `linux-lunar`, no
-   leftover `<machine-id>` entries in `/boot/loader/entries`; `uname -r` shows `-lunar`; ufw active (`sudo ufw status`); Flatseal
-   present; `systemctl status elara ananicy-cpp`; `cat /proc/cmdline`.
-5. **On NVIDIA hardware:** the DKMS module builds for both kernels
-   (`dkms status`).
-6. **On AMD hardware:** `systemctl status lunar-amdgpu-performance` and
-   compare with LACT. Don't run LACT's own power settings at the same time.
-7. **Installer packages:** `scripts/build-iso.sh` checks that every package in
-   `iso/packages.x86_64`, `pacstrap.conf` and `netinstall.yaml` exists in a
-   repo, and stops with a list if not.
 
 ## License
 
