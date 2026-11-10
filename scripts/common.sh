@@ -24,9 +24,6 @@ need() {
     done
 }
 
-# Where the local [lunar] repo appears inside the build chroot
-CHROOT_REPO_MOUNT="/lunar-repo"
-
 # Arch's repos with Lunar's mirrors (LUNAR_ARCH_MIRRORS) as Server lines, so
 # nothing depends on the host's mirrorlist
 arch_repos_conf() {
@@ -57,18 +54,15 @@ SigLevel    = Required DatabaseOptional
 LocalFileSigLevel = Optional
 
 EOF
+        # arch-nspawn (used by makechrootpkg too) mounts every file:// server
+        # of the chroot's pacman.conf read-only at the same path, so the
+        # local repo is listed by its real path
         if [[ "$with_lunar" == yes && -f "$DB_FILE" ]]; then
             printf '[%s]\nSigLevel = Optional TrustAll\nServer = file://%s\n\n' \
-                "$LUNAR_REPO_NAME" "$CHROOT_REPO_MOUNT"
+                "$LUNAR_REPO_NAME" "$REPO_DIR"
         fi
         arch_repos_conf
     } > "$out"
-}
-
-# makechrootpkg arguments that make the local repo visible in the chroot
-chroot_repo_args() {
-    [[ -f "$DB_FILE" ]] && printf '%s\n' -D "$REPO_DIR:$CHROOT_REPO_MOUNT"
-    return 0
 }
 
 # Create (or update) the clean chroot used by makechrootpkg.
@@ -87,18 +81,14 @@ ensure_chroot() {
     fi
     if [[ ! -d "$root" ]]; then
         msg "Creating build chroot in $LUNAR_CHROOT_DIR"
-        write_chroot_conf no      # the host can't see /lunar-repo yet
+        write_chroot_conf no      # the chroot is created without the local repo
         sudo mkdir -p "$LUNAR_CHROOT_DIR"
         sudo mkarchroot -C "$CHROOT_CONF" -c "$LUNAR_PKG_CACHE" "$root" base-devel
     fi
     msg "Updating build chroot"
     write_chroot_conf
     sudo cp "$CHROOT_CONF" "$LUNAR_CHROOT_DIR/root/etc/pacman.conf"
-    if [[ -f "$DB_FILE" ]]; then
-        sudo arch-nspawn "$LUNAR_CHROOT_DIR/root" --bind-ro="$REPO_DIR:$CHROOT_REPO_MOUNT" pacman -Syu --noconfirm
-    else
-        sudo arch-nspawn "$LUNAR_CHROOT_DIR/root" pacman -Syu --noconfirm
-    fi
+    sudo arch-nspawn "$LUNAR_CHROOT_DIR/root" pacman -Syu --noconfirm
 }
 
 # Sign new packages and add them to the repo database.

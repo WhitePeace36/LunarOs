@@ -72,8 +72,7 @@ for name in "${wanted[@]}"; do
     msg "Building $name $ver"
     stamp="$BUILD_DIR/.stamp-$name"
     touch "$stamp"
-    mapfile -t repo_args < <(chroot_repo_args)
-    if (cd "$dir" && makechrootpkg -c -u -r "$LUNAR_CHROOT_DIR" "${repo_args[@]}"); then
+    if (cd "$dir" && makechrootpkg -c -u -r "$LUNAR_CHROOT_DIR"); then
         mapfile -t pkgs < <(find "$dir" -maxdepth 1 -name '*.pkg.tar.zst' -newer "$stamp")
         [[ ${#pkgs[@]} -gt 0 ]] || { warn "$name: no package file produced"; failed+=("$name"); continue; }
         add_to_repo "${pkgs[@]}"

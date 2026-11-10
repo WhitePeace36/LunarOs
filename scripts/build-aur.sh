@@ -85,8 +85,7 @@ for pkg in "${wanted[@]}"; do
     msg "Building $pkg $ver (AUR)"
     stamp="$BUILD_DIR/.stamp-aur-$pkg"
     touch "$stamp"
-    mapfile -t repo_args < <(chroot_repo_args)
-    if (cd "$dir" && makechrootpkg -c -u -r "$LUNAR_CHROOT_DIR" "${repo_args[@]}"); then
+    if (cd "$dir" && makechrootpkg -c -u -r "$LUNAR_CHROOT_DIR"); then
         mapfile -t files < <(find "$dir" -maxdepth 1 -name '*.pkg.tar.zst' -newer "$stamp")
         if [[ ${#files[@]} -gt 0 ]]; then
             add_to_repo "${files[@]}"
