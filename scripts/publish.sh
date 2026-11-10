@@ -28,15 +28,28 @@ stage="$BUILD_DIR/publish"
 rm -rf "$stage"; mkdir -p "$stage"
 cp -L "$REPO_DIR"/* "$stage/"
 
-msg "Uploading $(find "$stage" -type f | wc -l) files to $gh_repo ($tag)"
-gh release upload "$tag" -R "$gh_repo" --clobber "$stage"/*
+mapfile -t current < <(cd "$stage" && ls -1)
+mapfile -t published < <(gh release view "$tag" -R "$gh_repo" --json assets --jq '.assets[].name')
+is_published() { [[ " ${published[*]} " == *" $1 "* ]]; }
+
+# Package files never change under the same name, so only new ones are
+# uploaded. The database files change with every build and always are.
+uploads=()
+for f in "${current[@]}"; do
+    case "$f" in
+        "$LUNAR_REPO_NAME".db|"$LUNAR_REPO_NAME".db.*|"$LUNAR_REPO_NAME".files|"$LUNAR_REPO_NAME".files.*)
+            uploads+=("$stage/$f") ;;
+        *) is_published "$f" || uploads+=("$stage/$f") ;;
+    esac
+done
+msg "Uploading ${#uploads[@]} of ${#current[@]} files to $gh_repo ($tag)"
+gh release upload "$tag" -R "$gh_repo" --clobber "${uploads[@]}"
 
 # drop assets that are no longer in the repo (old package versions)
-mapfile -t current < <(cd "$stage" && ls -1)
-while read -r asset; do
+for asset in "${published[@]}"; do
     [[ " ${current[*]} " == *" $asset "* ]] && continue
     msg2 "deleting old asset $asset"
     gh release delete-asset "$tag" "$asset" -R "$gh_repo" -y
-done < <(gh release view "$tag" -R "$gh_repo" --json assets --jq '.assets[].name')
+done
 
 msg "Published: $LUNAR_REPO_URL"

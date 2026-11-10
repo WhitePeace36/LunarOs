@@ -5,9 +5,8 @@
 # also builds nvidia-580xx-dkms). Order matters: a package that needs
 # another one from this list comes after it.
 
-# --- installer dependencies (lunar-calamares: keyboard layouts, encrypted swap) ---
+# --- installer dependency (lunar-calamares: console keyboard layouts) ---
 ckbcomp
-mkinitcpio-openswap
 
 # --- NVIDIA 580 legacy driver (GTX 750 - GTX 10xx, Volta) ---
 nvidia-580xx-utils

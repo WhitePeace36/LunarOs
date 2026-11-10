@@ -93,7 +93,11 @@ add_to_repo() {
     local pkg new files=()
     mkdir -p "$REPO_DIR"
     for pkg in "$@"; do
-        new="$REPO_DIR/$(basename "${pkg//:/.}")"
+        # GitHub renames release assets with other characters (e.g. the ":" of
+        # an epoch) to ".", so the file gets that name before repo-add
+        # records it; pacman then asks for the name that exists.
+        new="$(basename "$pkg")"
+        new="$REPO_DIR/${new//[^A-Za-z0-9._-]/.}"
         cp -f "$pkg" "$new"
         if [[ -n "$LUNAR_SIGNING_KEY" ]]; then
             rm -f "$new.sig"

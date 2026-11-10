@@ -9,167 +9,119 @@
   scheduler, ananicy-cpp (fork), and settings tuned for desktop gaming.
 </p>
 
-Lunar uses Arch's repositories (core, extra, multilib) for everything it
-doesn't change. Its own packages, plus the AUR packages it needs, live in a
-small `[lunar]` pacman repo listed **above** Arch's repos, so Lunar's versions
-win.
+Lunar is Arch Linux with a ready-to-use KDE Plasma desktop for gaming. It
+uses Arch's repositories (core, extra, multilib) for everything it doesn't
+change. Its own packages, and the few AUR packages it ships, come from the
+`[lunar]` repository, which is listed above Arch's.
 
-## What's in here
+## Features
 
-| Path | What it is |
+**Desktop**
+- KDE Plasma on Wayland, Plasma Login Manager, Breeze Dark throughout
+  (Plasma and GTK apps)
+- PipeWire for sound, with [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator)
+  and EasyEffects
+- Wi-Fi, Bluetooth and printer/scanner discovery on the network (mDNS) work
+  out of the box
+- zsh with the prompt `user@host:path(branch⚡) »`, `lsd`/`bat` aliases
+  (`ll`, `la`, `lt`, ...), `micro` as editor and `most` as pager
+
+**Performance**
+- [linux-lunar](https://github.com/WhitePeace36/linux-lunar) as the default
+  kernel, Arch's `linux-lts` as fallback
+- [Elara](https://github.com/WhitePeace36/Elara), a sched_ext CPU scheduler
+  driven by the nice values that [ananicy-cpp](https://github.com/WhitePeace36/ananicy-cpp)
+  sets from Lunar's [rules](https://github.com/WhitePeace36/ananicy-rules);
+  [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator)
+  edits the rules
+- System settings for desktops ([lunar-settings](https://github.com/WhitePeace36/lunar-settings)):
+  memory and swap (zram), transparent huge pages, CPU kept in C1 with the
+  performance governor, raised file and process limits, I/O schedulers per
+  disk type
+- AMD graphics cards run at their highest power limit with the VRAM clock
+  fixed at its maximum
+
+**Graphics**
+- AMD and Intel: Mesa
+- NVIDIA: picked automatically during installation, Wayland-capable drivers
+  only: `nvidia-open` for Turing (GTX 16xx/RTX 20xx) and newer, the 580xx
+  driver for Maxwell to Volta (GTX 750 to GTX 10xx), nouveau for older cards.
+  The installer can also install Mesa only.
+
+**Apps**
+- Gaming: Steam, Lutris, ProtonUp-Qt, MangoHud, gamescope
+- Internet: Brave, LibreWolf, LocalSend, Remmina (RDP/VNC)
+- Office: OnlyOffice, printing (CUPS, HP drivers) and scanning (Simple Scan)
+- Flatpak with Flathub and Flatseal, AppImageLauncher, balenaEtcher
+- No AUR helper is installed
+
+**System**
+- systemd-boot, Btrfs with subvolumes by default (ext4, XFS and F2FS too),
+  optional full-disk encryption (LUKS2)
+- Swap in compressed RAM (zram) only, no swap partition or file, so no
+  hibernation
+- Firewall (ufw) on: incoming connections are blocked, except for LocalSend
+- rtkit is masked, so Elara and ananicy-cpp control the priority of audio
+  and desktop threads
+
+The settings are made for desktop PCs. On a laptop they cost battery life:
+the CPU and PCIe links don't enter their power-saving states, and disks and
+the sound chip stay powered.
+
+## Requirements
+
+- A 64-bit x86 PC that boots in **UEFI** mode (legacy BIOS isn't supported)
+- **Secure Boot turned off** (the boot loader and kernel aren't signed)
+- 4 GB of RAM and 40 GB of disk space
+- An internet connection during installation: packages are downloaded
+  from the repositories, so the system is up to date right away
+
+## Installation
+
+1. Write the ISO to a USB stick (balenaEtcher, Ventoy, or
+   `dd if=lunar-*.iso of=/dev/sdX bs=4M status=progress`).
+2. Boot from it in UEFI mode. The live session starts KDE Plasma by itself.
+3. Connect to the internet, then start **Install Lunar** from the desktop.
+4. The installer asks for language, keyboard, disk, graphics driver,
+   additional software and the user account.
+
+## After installation
+
+| Task | How |
 |---|---|
-| `lunar.conf` | Settings for all scripts: repo URL, signing key, packager |
-| `packages/<name>/` | One folder per package in the `[lunar]` repo (PKGBUILD + its files) |
-| `packages/build-order.txt` | Order `build-packages.sh` builds in |
-| `packages/aur-packages.txt` | AUR packages built into `[lunar]` |
-| `iso/` | Live/install ISO profile (archiso) |
-| `branding/` | Logo master file and the logo options |
-| `scripts/` | Build, sign and publish helpers |
+| Update the system | `sudo pacman -Syu` (or the `update` alias) |
+| Change a sysctl setting | a file in `/etc/sysctl.d/` (for example `99-local.conf`) |
+| Add or change a kernel parameter | put it into a file in `/etc/lunar/cmdline.d/` (for example `50-local.conf`), run `sudo lunar-update-cmdline`; your parameters come last and win over Lunar's |
+| Leave out all of Lunar's kernel parameters | `LUNAR_DEFAULTS=no` in `/etc/lunar/cmdline.conf`, run `sudo lunar-update-cmdline` |
+| Show the kernel parameters | `lunar-update-cmdline --print` |
+| Switch graphics drivers after a GPU change | `sudo lunar-gpu-setup` (`--print` shows what it would do) |
+| Edit the ananicy-cpp rules | AnanicyConfigurator |
+| Check the scheduler | `systemctl status elara ananicy-cpp` |
 
-### Packages
+Files in `/etc` always take precedence over Lunar's defaults in `/usr/lib`,
+and updates never change them. Boot entries are written automatically
+whenever a kernel is installed, updated or removed.
 
-| Package | Purpose |
+## Related repositories
+
+| Repository | What it is |
 |---|---|
-| `linux-lunar` | Default kernel, built from `WhitePeace36/linux-lunar` (see below) |
-| `lunar-settings` | All system settings, built from `WhitePeace36/lunar-settings`: sysctl, THP/tmpfiles, kernel parameters (C1 only, performance governor, ...), zram, I/O schedulers, SATA/HDD rules, AMD GPU max power + fixed VRAM clock, limits, mDNS, `lunar-update-cmdline`, `lunar-sdboot-update`, `lunar-gpu-setup` |
-| `lunar-hooks` | pacman hooks: Lunar branding in `/etc/os-release`, "reboot required" notice after kernel/systemd updates |
-| `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login) |
-| `lunar-zsh-config` | Prompt `user@host:path(branch⚡) »`, grid completion menu, `lsd`/`bat`/… aliases |
-| `ananicy-cpp-lunar` | Build of the WhitePeace36 ananicy-cpp fork (replaces Arch's `ananicy-cpp`) |
-| `lunar-ananicy-rules` | ananicy-cpp rules from `WhitePeace36/ananicy-rules` |
-| `elara` | Elara scheduler (`WhitePeace36/Elara`), enabled by default; conflicts with `scx-manager` |
-| `pipewire-configurator-simple` | PipeWire GUI (`WhitePeace36/PipewireSimpleConfigurator`) |
-| `ananicy-configurator` | GUI for the ananicy-cpp rules (`WhitePeace36/AnanicyConfigurator`) |
-| `lunar-calamares` | Installer: upstream Calamares 3.3 + Lunar's modules, configs and branding |
-| `lunar-keyring`, `lunar-mirrorlist` | Repo key and server |
+| [linux-lunar](https://github.com/WhitePeace36/linux-lunar) | The kernel and its patches |
+| [lunar-settings](https://github.com/WhitePeace36/lunar-settings) | sysctl, tmpfiles, kernel parameters, udev rules, boot entry tools |
+| [Elara](https://github.com/WhitePeace36/Elara) | sched_ext CPU scheduler |
+| [ananicy-cpp](https://github.com/WhitePeace36/ananicy-cpp) | ananicy-cpp fork |
+| [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) | Lunar's ananicy-cpp rules |
+| [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) | GUI for the ananicy-cpp rules |
+| [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator) | GUI for PipeWire settings |
+| [lunar-repo](https://github.com/WhitePeace36/lunar-repo) | The `[lunar]` package repository |
 
-The settings are for desktops (CPU idle limited to C1, no PCIe power saving,
-performance governor); there is no battery profile for now. Any setting can
-be overridden with a file in `/etc` (see the lunar-settings README).
+This repository holds the packaging (PKGBUILDs), the installer
+configuration, the ISO profile and the build scripts:
 
-### The kernel
-
-`packages/linux-lunar/` has no PKGBUILD of its own. `prepare.sh` clones
-`WhitePeace36/linux-lunar` at a pinned commit, appends `lunar-distro.cfg` to
-its `customization.cfg` and runs `./lunar.sh --config-only`; the resulting
-folder is then built in the clean chroot like every other package.
-
-`lunar-distro.cfg` differs from a personal linux-lunar build: `_march=generic`
-(one package must boot every x86-64 CPU), `schedutil` and an idle tick. `lunar-settings`
-adds `cpufreq.default_governor=performance nohz=off` to the kernel command
-line, which gives linux-lunar's own defaults back (and applies to linux-lts
-too). `lunar-settings` sets the same memory values linux-lunar compiles in
-(defrag_mode 1, boost 600, proactiveness 50, ...), so linux-lts gets them as
-well.
-
-`--config-only` doesn't exist in linux-lunar yet; until it does,
-`prepare.sh` applies `packages/linux-lunar/lunar-config-only.patch`, which also
-lets the build continue when the source folder is read-only. Pushing that
-patch to linux-lunar makes it unnecessary.
-
-`linux-lts` from Arch is installed as the fallback kernel. The live ISO boots
-linux-lunar too (linux-lts as a fallback entry), with Mesa only.
-
-### Graphics drivers
-
-`lunar-gpu-setup` (in `lunar-settings`, run by the installer and by hand after
-a GPU swap) reads the PCI IDs: NVIDIA Turing and newer get `nvidia-open-dkms`,
-Maxwell/Pascal/Volta the 580xx legacy driver (AUR, built into `[lunar]`),
-Kepler and older nouveau (NVIDIA's old drivers have no Wayland support),
-AMD/Intel Mesa. Laptops with two GPUs get both plus `nvidia-prime`.
-`lunar-gpu-setup --print` shows what it would do.
-
-### Kernel parameters
-
-`lunar-update-cmdline` collects `/usr/lib/lunar/cmdline.d/*.conf` (from the
-packages) and `/etc/lunar/cmdline.d/*.conf` (local overrides; a same-named
-file in `/etc` replaces the one in `/usr/lib`) and writes `/etc/kernel/cmdline` = `/etc/lunar/cmdline-root` (root=, LUKS,
-subvolume, resume; written once by the installer) + those parameters. Then
-`lunar-sdboot-update` writes the systemd-boot entries.
-
-`lunar-update-cmdline --print` shows the current list.
-
-### Boot entries
-
-`lunar-sdboot-update` writes `/boot/loader/entries/lunar-<kernel>.conf` (and
-`-fallback.conf`) for every installed kernel, using the images mkinitcpio
-keeps in `/boot` (`vmlinuz-<kernel>`, `initramfs-<kernel>.img`), removes
-entries of removed kernels and makes `linux-lunar` the default unless another
-default is set in `loader.conf`. A pacman hook runs it after every kernel install,
-upgrade or removal; `systemd-boot-update.service` keeps the boot loader itself
-current. The ESP must be mounted at `/boot` (the installer does that).
-
-### Installer
-
-Upstream Calamares 3.3 (Qt6), built with two Lunar job modules
-(`packages/lunar-calamares/modules`): `pacstrap` installs the system straight
-from the repos (no image), `gpudrivers` runs `lunar-gpu-setup`. Pages:
-welcome, location, keyboard, partitions, **Graphics** (Automatic / Mesa only),
-additional software
-(`config/modules/netinstall.yaml`), user, summary.
-
-It is **UEFI only** and always installs **systemd-boot**. It installs
-`linux-lunar` (default entry) and `linux-lts`, ranks Arch mirrors with
-reflector, uses zsh for new users, masks rtkit, enables ufw (incoming blocked
-except LocalSend 53317 tcp/udp), installs Flatseal from Flathub, and no AUR
-helper. Filesystems: Btrfs (default, with subvolumes), ext4, XFS, F2FS;
-optional LUKS2 encryption. The last step, `scripts/lunar-post-install`, turns
-the boot setup of Calamares' systemd-boot step (kernel-install) into Lunar's
-own (`lunar-update-cmdline`).
-
-## How the repositories fit together
-
-| Repo | Holds | Built by |
-|---|---|---|
-| `WhitePeace36/LunarOs` | this project: PKGBUILDs, installer config, ISO profile, scripts | - |
-| `WhitePeace36/lunar-repo` | only the release with the built packages (`[lunar]`) | `scripts/publish.sh` |
-| `WhitePeace36/linux-lunar`, `ananicy-cpp`, `Elara`, `PipewireSimpleConfigurator`, `AnanicyConfigurator` | the projects' own source; no Lunar files needed in them | their PKGBUILD here pins a commit |
-| `WhitePeace36/lunar-settings` | sysctl, tmpfiles, cmdline, udev, zram, ... (`files/`) | `packages/lunar-settings/prepare.sh` |
-| `WhitePeace36/ananicy-rules` | the rules in `ananicy.d/` (same layout as `/etc/ananicy.d`) | `packages/lunar-ananicy-rules` |
-
-Every Lunar package is a folder under `packages/` with the PKGBUILD and the
-files it installs; no build output is committed (`.gitignore`). A package for
-one of these projects only pins a commit, so a release is: push to the
-project, change `_commit` here, rebuild that package, publish.
-
-## Building
-
-Run everything on an Arch (or Arch-based) machine. One-time setup:
-
-```sh
-sudo pacman -S --needed devtools archiso squashfs-tools github-cli
-gpg --locate-keys torvalds@kernel.org gregkh@kernel.org   # kernel tarball signatures
-scripts/make-key.sh          # creates the signing key, fills packages/lunar-keyring
-```
-
-Create the public repo `WhitePeace36/lunar-repo` on GitHub (empty). For another
-name, change `LUNAR_REPO_URL` in `lunar.conf`.
-
-Then, in this order (later steps need earlier packages):
-
-```sh
-scripts/build-aur.sh         # AUR packages Arch doesn't have (asks per PKGBUILD)
-scripts/build-packages.sh    # Lunar's packages incl. the kernel -> repo/x86_64 (signed)
-scripts/publish.sh           # upload repo/x86_64 to the GitHub release
-scripts/build-iso.sh         # ISO in iso/out/
-```
-
-The kernel build takes a while (30-90 minutes depending on the CPU). Test the
-ISO in a VM before real hardware, e.g. with GNOME Boxes or
-`qemu-system-x86_64 -enable-kvm -m 8G -cdrom iso/out/lunar-*.iso -bios /usr/share/edk2/x64/OVMF.4m.fd`
-(UEFI firmware is required). Secure Boot must be off: the ISO's boot loader,
-systemd-boot and linux-lunar aren't signed.
-
-### Updating
-
-* Kernel: `_version` in `packages/linux-lunar/lunar-distro.cfg` and/or `_commit` in its `prepare.sh`, then `scripts/build-packages.sh linux-lunar`.
-* Elara, ananicy-cpp and the two configurators: `_commit` in their PKGBUILD, then `scripts/build-packages.sh <name>`.
-* Settings (sysctl, tmpfiles, cmdline, ...): edit them in the `lunar-settings` repo, raise `pkgver` there, push, set `_commit` in `packages/lunar-settings/prepare.sh`, then `scripts/build-packages.sh lunar-settings`.
-* Ananicy rules: push to `WhitePeace36/ananicy-rules`, set `_commit` in `packages/lunar-ananicy-rules/PKGBUILD`, rebuild.
-* Calamares: `pkgver`/`_commit` in `packages/lunar-calamares/PKGBUILD` (a release tag), compare upstream's module configs with `config/modules`.
-* ISO profile: compare `iso/` with a newer archiso `configs/releng` now and then.
-* AUR packages: re-run `scripts/build-aur.sh`; it rebuilds only what changed.
-* `scripts/publish.sh` after every build.
+- [docs/how-it-works.md](docs/how-it-works.md): kernel packaging, boot
+  entries, graphics driver selection, installer
+- [docs/building.md](docs/building.md): building the packages and the ISO,
+  publishing, updating components
 
 ## License
 

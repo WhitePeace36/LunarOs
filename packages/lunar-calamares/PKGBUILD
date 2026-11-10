@@ -12,7 +12,7 @@
 #   pacman.conf  pacman.conf for the installed system
 #
 # The installer is UEFI only and always installs systemd-boot.
-# ckbcomp and mkinitcpio-openswap come from the AUR (scripts/build-aur.sh).
+# ckbcomp comes from the AUR (scripts/build-aur.sh).
 #
 # To update Calamares: set pkgver and _commit to the new tag, compare the
 # upstream module configs (src/modules/*/*.conf) with config/modules, reset
@@ -50,7 +50,6 @@ depends=(
   cryptsetup
   dosfstools
   gptfdisk
-  mkinitcpio-openswap    # encrypted swap (AUR)
   reflector
   squashfs-tools
   systemd                # bootctl, kernel-install
@@ -74,10 +73,10 @@ sha256sums=('SKIP')
 _skip_modules=(
   contextualprocess displaymanager dracut dracutlukscfg dummycpp dummyprocess
   dummypython finishedq fsresizer grubcfg initramfs initramfscfg
-  interactiveterminal keyboardq license localeq mkinitfs notesqml oemid
-  openrcdmcryptcfg packagechooserq plasmalnf preservefiles rawfs removeuser
-  services-openrc summaryq tracking unpackfs unpackfsc usersq welcomeq zfs
-  zfshostid
+  interactiveterminal keyboardq license localeq luksopenswaphookcfg mkinitfs
+  notesqml oemid openrcdmcryptcfg packagechooserq plasmalnf preservefiles
+  rawfs removeuser services-openrc summaryq tracking unpackfs unpackfsc
+  usersq welcomeq zfs zfshostid
 )
 
 prepare() {
