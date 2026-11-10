@@ -40,9 +40,10 @@
     - kate
     - kcalc
     - spectacle
+    - tesseract-data-eng   # text recognition data; else pacman picks the first of 128 languages (Afrikaans)
     - gwenview
     - haruna
-    - filelight
+    - baobab
     - partitionmanager
     - ffmpegthumbs
     - kdegraphics-thumbnailers
@@ -95,7 +96,6 @@
     - name: "Power and firmware"
       selected: true
       packages:
-        - power-profiles-daemon
         - upower
         - cpupower
         - fwupd
@@ -156,7 +156,7 @@
     - xdg-utils
 
 - name: "Gaming"
-  description: "Steam, Lutris, ProtonUp-Qt, MangoHud, gamescope"
+  description: "Steam, Lutris, ProtonUp-Qt and MangoHud"
   selected: true
   packages:
     - steam
@@ -164,7 +164,6 @@
     - protonup-qt          # [lunar]
     - mangohud
     - lib32-mangohud
-    - gamescope
 
 - name: "Internet"
   description: "Brave, LibreWolf and LocalSend"

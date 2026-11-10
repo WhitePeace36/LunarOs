@@ -49,7 +49,7 @@ change. Its own packages, and the few AUR packages it ships, come from the
   The installer can also install Mesa only.
 
 **Apps**
-- Gaming: Steam, Lutris, ProtonUp-Qt, MangoHud, gamescope
+- Gaming: Steam, Lutris, ProtonUp-Qt, MangoHud
 - Internet: Brave, LibreWolf, LocalSend, Remmina (RDP/VNC)
 - Office: OnlyOffice, printing (CUPS, HP drivers) and scanning (Simple Scan)
 - Flatpak with Flathub and Flatseal, AppImageLauncher, balenaEtcher

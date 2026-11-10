@@ -1,0 +1,10 @@
+# Lunar: Dolphin shows every folder the same way: as a list with details
+# (name, size, modified), folders that expand into a tree, hidden files
+# visible. The view itself (details, hidden files) is in
+# /etc/skel/.local/share/dolphin/view_properties/global/.directory, which
+# Dolphin only reads from the user's home.
+[General]
+GlobalViewProps=true
+
+[DetailsMode]
+ExpandableFolders=true

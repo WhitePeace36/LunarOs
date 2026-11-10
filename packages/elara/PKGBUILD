@@ -9,8 +9,8 @@
 # To update: set _commit to the new commit and reset pkgrel to 1.
 
 pkgname=elara
-_commit=24804f0a92d02d5fa532b36a3016d7b865a8ac6c
-pkgver=0.r40.g24804f0
+_commit=ce8803431b0f16366850d563bf10ce2be666000c
+pkgver=0.r42.gce88034
 pkgrel=1
 pkgdesc='sched_ext CPU scheduler, tuned by nice values, for stable frame times'
 arch=('x86_64')

@@ -73,7 +73,7 @@ Presentation
     }
     LunarSlide {
         heading: "Ready for games"
-        body: "Steam, Lutris, ProtonUp-Qt, MangoHud and gamescope are installed. NVIDIA cards get the newest driver that supports them on Wayland."
+        body: "Steam, Lutris, ProtonUp-Qt and MangoHud are installed. NVIDIA cards get the newest driver that supports them on Wayland."
     }
     LunarSlide {
         heading: "Safe by default"

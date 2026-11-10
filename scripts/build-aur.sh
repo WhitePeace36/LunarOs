@@ -37,6 +37,7 @@ fi
 
 export PACKAGER="$LUNAR_PACKAGER"
 ensure_chroot
+remove_debug_packages
 
 # Sync a private copy of the Arch databases (no root needed)
 SYNC_DB="$BUILD_DIR/syncdb"
@@ -208,7 +209,7 @@ for pkg in "${order[@]}"; do
     stamp="$BUILD_DIR/.stamp-aur-$pkg"
     touch "$stamp"
     if (cd "$dir" && makechrootpkg -c -u -r "$LUNAR_CHROOT_DIR"); then
-        mapfile -t files < <(find "$dir" -maxdepth 1 -name '*.pkg.tar.zst' -newer "$stamp")
+        mapfile -t files < <(new_packages "$dir" "$stamp")
         if [[ ${#files[@]} -gt 0 ]]; then
             add_to_repo "${files[@]}"
             rm -f "${files[@]}"

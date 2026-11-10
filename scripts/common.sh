@@ -93,6 +93,40 @@ ensure_chroot() {
     write_chroot_conf
     sudo cp "$CHROOT_CONF" "$LUNAR_CHROOT_DIR/root/etc/pacman.conf"
     sudo arch-nspawn "$LUNAR_CHROOT_DIR/root" pacman -Syu --noconfirm
+    # Arch's makepkg.conf has the "debug" option on, which makes every build
+    # write a <name>-debug package next to the real one. Lunar doesn't ship
+    # those. Done on every run: the chroot may be older than this line, and
+    # a pacman update can bring a new makepkg.conf.
+    sudo sed -i -E '/^OPTIONS=/ s/([( ])!?debug([ )])/\1!debug\2/' "$root/etc/makepkg.conf"
+    grep -Eq '^OPTIONS=.*[( ]!debug[ )]' "$root/etc/makepkg.conf" \
+        || echo "OPTIONS+=('!debug')" | sudo tee -a "$root/etc/makepkg.conf" >/dev/null
+}
+
+# Package files makechrootpkg wrote into <dir> since <stamp> was touched,
+# one per line. -debug packages (a PKGBUILD can still ask for them with
+# options=(debug)) are deleted instead of listed: they never go into [lunar].
+new_packages() {  # <dir> <stamp>
+    find "$1" -maxdepth 1 -name '*-debug-*.pkg.tar.zst' -newer "$2" -delete
+    find "$1" -maxdepth 1 -name '*.pkg.tar.zst' -newer "$2"
+}
+
+# Take the -debug packages of earlier builds out of the local repo: database
+# entries and files. scripts/publish.sh then deletes them from the release.
+remove_debug_packages() {
+    [[ -f "$DB_FILE" ]] || return 0
+    local names=() n
+    mapfile -t names < <(bsdtar -tf "$DB_FILE" \
+        | sed -nE 's|^(.+-debug)-[^-/]+-[^-/]+/desc$|\1|p' | sort -u)
+    [[ ${#names[@]} -gt 0 ]] || return 0
+    msg "Removing debug packages from the repo: ${names[*]}"
+    if [[ -n "$LUNAR_SIGNING_KEY" ]]; then
+        repo-remove --sign --key "$LUNAR_SIGNING_KEY" "$DB_FILE" "${names[@]}"
+    else
+        repo-remove "$DB_FILE" "${names[@]}"
+    fi
+    for n in "${names[@]}"; do
+        rm -f "$REPO_DIR/$n"-[0-9]*.pkg.tar.zst "$REPO_DIR/$n"-[0-9]*.pkg.tar.zst.sig
+    done
 }
 
 # Sign new packages and add them to the repo database.

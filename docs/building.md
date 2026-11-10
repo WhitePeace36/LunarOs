@@ -83,6 +83,14 @@ qemu-system-x86_64 -enable-kvm -m 8G -cdrom iso/out/lunar-*.iso \
 
 The installer writes its log to `~/lunar-install.log` in the live session.
 
+## Debug packages
+
+Arch's `makepkg.conf` builds a `<name>-debug` package next to every package.
+Lunar doesn't ship them: the build scripts turn the option off in the build
+chroot, and remove the debug packages of earlier builds from `repo/x86_64`
+the next time `build-aur.sh` or `build-packages.sh` runs. Run
+`scripts/publish.sh` afterwards to delete them from the release as well.
+
 ## Updating components
 
 | Component | Change | Then |

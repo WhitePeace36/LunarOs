@@ -2,8 +2,8 @@
 
 pkgname=lunar-kde-settings
 pkgver=1.1.0
-pkgrel=1
-pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar logo on the application launcher)'
+pkgrel=2
+pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar logo on the application launcher, Dolphin view)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')

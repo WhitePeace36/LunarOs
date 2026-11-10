@@ -47,6 +47,7 @@ fi
 
 export PACKAGER="$LUNAR_PACKAGER"
 ensure_chroot
+remove_debug_packages
 
 built=()
 failed=()
@@ -73,7 +74,7 @@ for name in "${wanted[@]}"; do
     stamp="$BUILD_DIR/.stamp-$name"
     touch "$stamp"
     if (cd "$dir" && makechrootpkg -c -u -r "$LUNAR_CHROOT_DIR"); then
-        mapfile -t pkgs < <(find "$dir" -maxdepth 1 -name '*.pkg.tar.zst' -newer "$stamp")
+        mapfile -t pkgs < <(new_packages "$dir" "$stamp")
         [[ ${#pkgs[@]} -gt 0 ]] || { warn "$name: no package file produced"; failed+=("$name"); continue; }
         add_to_repo "${pkgs[@]}"
         rm -f "${pkgs[@]}"

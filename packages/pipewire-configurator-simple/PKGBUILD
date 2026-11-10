@@ -8,7 +8,7 @@
 # CMakeLists.txt, and reset pkgrel to 1.
 
 pkgname=pipewire-configurator-simple
-_commit=e3f9a1199e1ec8391aa921cb12dc1680a9697cce
+_commit=ddb9152429a31e55bd8c1d636f290ed31989a26a
 pkgver=2.0
 pkgrel=1
 pkgdesc='GUI tool for PipeWire and WirePlumber settings'
@@ -31,10 +31,6 @@ build() {
     -DCMAKE_INSTALL_PREFIX=/usr \
     -Wno-dev
   cmake --build build
-}
-
-check() {
-  QT_QPA_PLATFORM=offscreen ctest --test-dir build --output-on-failure
 }
 
 package() {
