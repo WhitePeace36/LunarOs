@@ -2,8 +2,8 @@
 # scripts/build-aur.sh builds each from the AUR into the [lunar] repo, and
 # skips any that Arch's repos have by now. One AUR package BASE per line
 # (for split packages that is the AUR repo name, e.g. nvidia-580xx-utils
-# also builds nvidia-580xx-dkms). Order matters: a package that needs
-# another one from this list comes after it.
+# also builds nvidia-580xx-dkms). AUR packages these need are found and
+# built first automatically; they don't have to be listed here.
 
 # --- installer dependency (lunar-calamares: console keyboard layouts) ---
 ckbcomp

@@ -56,8 +56,12 @@ scripts/build-iso.sh         # ISO in iso/out/
 ```
 
 - `build-aur.sh` clones each package from `aur-packages.txt`, shows the
-  PKGBUILD for review and builds it. Packages Arch's repositories carry by
-  now are skipped. Split packages are listed by their package base.
+  PKGBUILD for review (`--yes` skips that) and builds it. AUR packages they
+  need are built first automatically; packages that would need Electron from
+  the AUR (a source build of many hours) are refused. PGP keys a PKGBUILD
+  lists in `validpgpkeys` are imported into your gpg keyring. Packages Arch's
+  repositories carry by now are skipped. Split packages are listed by their
+  package base.
 - `build-packages.sh` builds everything in `build-order.txt` (or the
   packages given as arguments) whose version isn't in the repository yet,
   signs it and adds it to `repo/x86_64`. The kernel takes 30 to 90 minutes.
