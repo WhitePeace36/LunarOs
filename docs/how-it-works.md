@@ -31,13 +31,14 @@ linux-lunar at a pinned commit, appends `lunar-distro.cfg` to its
 `customization.cfg` and runs `./lunar.sh --config-only`; the resulting folder
 is then built in the clean chroot like every other package.
 
-`lunar-distro.cfg` differs from a personal linux-lunar build:
-`_march=generic` (one package must boot every x86-64 CPU), `schedutil` and an
-idle tick. `lunar-settings` adds `cpufreq.default_governor=performance
-nohz=off` to the kernel command line, which restores linux-lunar's own
-defaults and applies to linux-lts too. `lunar-settings` also sets the memory
-values linux-lunar compiles in (`vm.defrag_mode=1`, boost 600, proactiveness
-50, ...), so linux-lts gets them as well.
+`lunar-distro.cfg` differs from a personal linux-lunar build in
+`_march=generic` (one package must boot every x86-64 CPU) and in building
+non-interactively without user patches. Everything else keeps linux-lunar's
+defaults: 1000 Hz, full preemption, periodic tick, the performance governor,
+THP `always`. `lunar-settings` sets the memory values linux-lunar compiles in
+(`vm.defrag_mode=1`, boost 600, proactiveness 50, THP, ...) once more as
+sysctl and tmpfiles settings, so linux-lts gets them as well. linux-lts keeps
+its own tick and governor.
 
 linux-lunar has no `--config-only` mode yet; until it does, `prepare.sh`
 applies `packages/linux-lunar/lunar-config-only.patch`, which also lets the
