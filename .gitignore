@@ -15,6 +15,7 @@ packages/*/ananicy-cpp/
 packages/*/elara/
 packages/*/psc/
 packages/*/calamares/
+packages/*/rules/
 
 # never commit a secret key
 *.asc
