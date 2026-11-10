@@ -211,4 +211,4 @@
   packages:
     - flatpak
     - appimagelauncher     # [lunar]
-    - balena-etcher        # [lunar]
+    - etcher-bin           # [lunar] balenaEtcher, prebuilt

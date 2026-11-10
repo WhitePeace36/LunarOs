@@ -18,5 +18,5 @@ librewolf-bin
 onlyoffice-bin
 localsend-bin
 appimagelauncher
-balena-etcher
+etcher-bin
 protonup-qt
