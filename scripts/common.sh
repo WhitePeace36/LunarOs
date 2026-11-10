@@ -27,19 +27,32 @@ need() {
 # Where the local [lunar] repo appears inside the build chroot
 CHROOT_REPO_MOUNT="/lunar-repo"
 
+# Arch's repos with Lunar's mirrors (LUNAR_ARCH_MIRRORS) as Server lines, so
+# nothing depends on the host's mirrorlist
+arch_repos_conf() {
+    local repo m
+    for repo in core extra multilib; do
+        printf '[%s]\n' "$repo"
+        for m in "${LUNAR_ARCH_MIRRORS[@]}"; do printf 'Server = %s\n' "$m"; done
+        printf '\n'
+    done
+}
+
 # pacman.conf for the clean build chroot: Arch's repos, plus the local
 # [lunar] repo once it has packages, so a package can depend on another
 # Lunar or AUR package that was built before it (e.g. lunar-calamares needs
-# ckbcomp). The chroot gets a copy of the host's /etc/pacman.d/mirrorlist.
+# ckbcomp). Mirrors and package cache are Lunar's own (lunar.conf), not the
+# host's.
 write_chroot_conf() {
     local with_lunar="${1:-yes}" out="${2:-$CHROOT_CONF}"
     mkdir -p "$BUILD_DIR"
     {
-        cat <<'EOF'
+        cat <<EOF
 [options]
 HoldPkg     = pacman glibc
 Architecture = auto
 ParallelDownloads = 10
+CacheDir    = $LUNAR_PKG_CACHE
 SigLevel    = Required DatabaseOptional
 LocalFileSigLevel = Optional
 
@@ -48,16 +61,7 @@ EOF
             printf '[%s]\nSigLevel = Optional TrustAll\nServer = file://%s\n\n' \
                 "$LUNAR_REPO_NAME" "$CHROOT_REPO_MOUNT"
         fi
-        cat <<'EOF'
-[core]
-Include = /etc/pacman.d/mirrorlist
-
-[extra]
-Include = /etc/pacman.d/mirrorlist
-
-[multilib]
-Include = /etc/pacman.d/mirrorlist
-EOF
+        arch_repos_conf
     } > "$out"
 }
 
@@ -70,11 +74,22 @@ chroot_repo_args() {
 # Create (or update) the clean chroot used by makechrootpkg.
 ensure_chroot() {
     need devtools mkarchroot makechrootpkg arch-nspawn
-    if [[ ! -d "$LUNAR_CHROOT_DIR/root" ]]; then
+    local root="$LUNAR_CHROOT_DIR/root"
+    sudo mkdir -p "$LUNAR_PKG_CACHE"
+    # mkarchroot writes .arch-chroot last; without it the creation failed
+    if [[ -d "$root" && ! -f "$root/.arch-chroot" ]]; then
+        warn "removing the unfinished build chroot $root"
+        if command -v btrfs >/dev/null && sudo btrfs subvolume show "$root" >/dev/null 2>&1; then
+            sudo btrfs subvolume delete "$root" >/dev/null
+        else
+            sudo rm -rf --one-file-system "$root"
+        fi
+    fi
+    if [[ ! -d "$root" ]]; then
         msg "Creating build chroot in $LUNAR_CHROOT_DIR"
         write_chroot_conf no      # the host can't see /lunar-repo yet
         sudo mkdir -p "$LUNAR_CHROOT_DIR"
-        sudo mkarchroot -C "$CHROOT_CONF" "$LUNAR_CHROOT_DIR/root" base-devel
+        sudo mkarchroot -C "$CHROOT_CONF" -c "$LUNAR_PKG_CACHE" "$root" base-devel
     fi
     msg "Updating build chroot"
     write_chroot_conf

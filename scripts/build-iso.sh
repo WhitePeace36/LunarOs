@@ -50,6 +50,11 @@ sudo rm -rf "$profile"
 cp -a "$profile_src" "$profile"
 rm -f "$profile/README.md"
 sed -i "s|@LUNAR_REPO_SERVER@|$server|" "$profile/pacman.conf"
+# Arch's repos with Lunar's mirrors and package cache instead of the host's
+# (lunar.conf: LUNAR_ARCH_MIRRORS, LUNAR_PKG_CACHE)
+sudo mkdir -p "$LUNAR_PKG_CACHE"
+sed -i -e '/^\[core\]$/,$d' -e "s|^\[options\]$|[options]\nCacheDir = $LUNAR_PKG_CACHE|" "$profile/pacman.conf"
+arch_repos_conf >> "$profile/pacman.conf"
 if [[ -z "$LUNAR_SIGNING_KEY" ]]; then
     warn "no signing key: accepting unsigned [lunar] packages for this test build only"
     sed -i '/^\[lunar\]$/a SigLevel = Optional TrustAll' "$profile/pacman.conf"

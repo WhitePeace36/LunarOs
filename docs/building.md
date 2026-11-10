@@ -3,6 +3,13 @@
 Everything is built on an Arch (or Arch-based) system: the packages in a
 clean chroot (devtools), the ISO with archiso.
 
+The builds don't use the host's mirrorlist or package cache: they download
+from Arch's own mirrors (`LUNAR_ARCH_MIRRORS` in `lunar.conf`) into
+`/var/lib/lunar-build/pkgcache` (`LUNAR_PKG_CACHE`). So they work the same on
+Arch and on Arch-based distributions, whose mirrors can lag behind Arch and
+whose caches can hold their own builds of Arch packages under the same file
+names.
+
 ## Repository layout
 
 | Path | What it is |

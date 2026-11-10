@@ -20,3 +20,4 @@ packages/*/calamares/
 *.asc
 *.key
 __pycache__/
+
