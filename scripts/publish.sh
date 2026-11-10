@@ -27,13 +27,37 @@ fi
 stage="$BUILD_DIR/publish"
 rm -rf "$stage"; mkdir -p "$stage"
 cp -L "$REPO_DIR"/* "$stage/"
+rm -f "$stage"/*.old    # repo-add's backups of the previous database
 
 mapfile -t current < <(cd "$stage" && ls -1)
-mapfile -t published < <(gh release view "$tag" -R "$gh_repo" --json assets --jq '.assets[].name')
-is_published() { [[ " ${published[*]} " == *" $1 "* ]]; }
 
-# Package files never change under the same name, so only new ones are
-# uploaded. The database files change with every build and always are.
+# name, size and (where GitHub reports one) sha256 digest of every asset
+published=()
+declare -A pub_size=() pub_digest=()
+while IFS=$'\t' read -r name size digest; do
+    [[ -n "$name" ]] || continue
+    published+=("$name")
+    pub_size[$name]="$size"
+    pub_digest[$name]="${digest:-}"
+done < <(gh release view "$tag" -R "$gh_repo" --json assets \
+            --jq '.assets[] | [.name, (.size | tostring), (.digest // "")] | @tsv')
+
+# The asset exists with the same content. A package that was built again
+# under the same version (--force, or a build on another machine) has the
+# same name but other contents, and the database lists the new checksum and
+# signature: it must be uploaded again, or pacman rejects the download.
+is_published() {
+    local f="$1"
+    [[ -n "${pub_size[$f]:-}" ]] || return 1
+    if [[ "${pub_digest[$f]}" == sha256:* ]]; then
+        [[ "sha256:$(sha256sum "$stage/$f" | cut -d' ' -f1)" == "${pub_digest[$f]}" ]]
+    else
+        [[ "$(stat -c %s "$stage/$f")" == "${pub_size[$f]}" ]]
+    fi
+}
+
+# Only new or changed package files are uploaded. The database files change
+# with every build and always are.
 uploads=()
 for f in "${current[@]}"; do
     case "$f" in

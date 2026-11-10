@@ -65,7 +65,7 @@ scripts/build-iso.sh         # ISO in iso/out/
 - `build-packages.sh` builds everything in `build-order.txt` (or the
   packages given as arguments) whose version isn't in the repository yet,
   signs it and adds it to `repo/x86_64`. The kernel takes 30 to 90 minutes.
-- `publish.sh` uploads new packages and the database to the release and
+- `publish.sh` uploads new or changed packages and the database to the release and
   deletes assets of versions that are no longer in the repository.
 - `build-iso.sh` uses the local repository if it exists (`--remote` for the
   published one). Before building, it checks that every package in

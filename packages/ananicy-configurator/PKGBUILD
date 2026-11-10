@@ -9,7 +9,7 @@
 
 pkgname=ananicy-configurator
 _commit=0f4f7af25239fe8bc75a05b02f3a98bc1d88c820
-pkgver=1.0.0.r0.g0f4f7af
+pkgver=1.0.0
 pkgrel=1
 pkgdesc='Qt GUI to edit ananicy / ananicy-cpp types, rules and ananicy.conf'
 arch=('x86_64')

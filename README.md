@@ -18,7 +18,7 @@ change. Its own packages, and the few AUR packages it ships, come from the
 
 **Desktop**
 - KDE Plasma on Wayland, Plasma Login Manager, Breeze Dark throughout
-  (Plasma and GTK apps)
+  (Plasma and GTK apps), the Lunar logo on the application launcher
 - PipeWire for sound, with [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator)
   and EasyEffects
 - Wi-Fi, Bluetooth and printer/scanner discovery on the network (mDNS) work

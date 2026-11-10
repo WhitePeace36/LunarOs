@@ -2,7 +2,7 @@
 
 pkgname=lunar-zsh-config
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Lunar - zsh configuration (prompt, completion menu, modern CLI aliases)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'

@@ -10,7 +10,7 @@
 
 pkgname=elara
 _commit=24804f0a92d02d5fa532b36a3016d7b865a8ac6c
-pkgver=0.r0.g24804f0
+pkgver=0.r40.g24804f0
 pkgrel=1
 pkgdesc='sched_ext CPU scheduler, tuned by nice values, for stable frame times'
 arch=('x86_64')

@@ -21,7 +21,7 @@
 pkgname=lunar-calamares
 pkgver=3.3.14
 _commit=21ea803527735cfaf54fa6059e71d1ef65004864  # tag v3.3.14
-pkgrel=1
+pkgrel=2
 pkgdesc='Lunar installer (Calamares)'
 arch=('x86_64')
 url='https://github.com/calamares/calamares'

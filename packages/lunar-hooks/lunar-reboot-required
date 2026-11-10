@@ -8,9 +8,12 @@ mapfile -t targets
 echo "==> A reboot is needed to use the updated kernel, drivers or system libraries."
 
 command -v notify-send >/dev/null || exit 0
-# notify every logged-in graphical user
+# notify every logged-in graphical user, once (a user has several sessions)
+declare -A notified=()
 while read -r _session uid user _seat _; do
     [[ -n "$uid" && "$uid" -ge 1000 ]] || continue
+    [[ -z "${notified[$uid]:-}" ]] || continue
+    notified[$uid]=1
     bus="/run/user/$uid/bus"
     [[ -S "$bus" ]] || continue
     sudo -u "$user" DBUS_SESSION_BUS_ADDRESS="unix:path=$bus" \

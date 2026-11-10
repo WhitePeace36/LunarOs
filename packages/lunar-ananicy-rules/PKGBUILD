@@ -9,7 +9,7 @@
 
 pkgname=lunar-ananicy-rules
 _commit=c3ef34fa90a0356d98795318c8c8f67cd0a79d5c
-pkgver=r0
+pkgver=r2.gc3ef34f
 pkgrel=1
 pkgdesc='Lunar - ananicy-cpp rules tuned for the Elara scheduler'
 arch=('any')

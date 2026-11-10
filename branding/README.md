@@ -8,6 +8,7 @@ used in:
 | [lunar-settings](https://github.com/WhitePeace36/lunar-settings) | `files/usr/share/icons/hicolor/scalable/apps/lunar.svg`, `files/usr/share/icons/hicolor/*/apps/lunar.png`, `files/usr/share/pixmaps/lunar.svg` |
 | Installer | `packages/lunar-calamares/branding/lunar/{logo,icon,welcome}.png` |
 | Live ISO | `iso/airootfs/usr/share/icons/hicolor/scalable/apps/lunar.svg` |
+| Application launcher (panel) | `packages/lunar-kde-settings/files/usr/share/icons/hicolor/scalable/apps/start-here-lunar.svg` |
 
 After changing the master, regenerate these.
 

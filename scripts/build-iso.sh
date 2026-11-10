@@ -47,8 +47,11 @@ profile="$BUILD_DIR/iso-profile"
 work="$BUILD_DIR/iso-work"
 mkdir -p "$BUILD_DIR"
 sudo rm -rf "$profile"
-cp -a "$profile_src" "$profile"
-rm -f "$profile/README.md"
+mkdir -p "$profile"
+# without out/ and work/: the ISOs built before are several GB each
+find "$profile_src" -mindepth 1 -maxdepth 1 \
+    ! -name out ! -name work ! -name README.md ! -name .gitignore \
+    -exec cp -a -t "$profile" {} +
 sed -i "s|@LUNAR_REPO_SERVER@|$server|" "$profile/pacman.conf"
 # Arch's repos with Lunar's mirrors and package cache instead of the host's
 # (lunar.conf: LUNAR_ARCH_MIRRORS, LUNAR_PKG_CACHE)

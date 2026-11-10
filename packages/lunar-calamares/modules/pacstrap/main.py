@@ -86,7 +86,7 @@ def run():
     if rc != 0:
         return ("The base system could not be installed",
                 "pacstrap failed (exit code {!s}). Check the internet connection "
-                "and the log in /home/liveuser/.cache/calamares/session.log.".format(rc))
+                "and the log in /home/liveuser/lunar-install.log.".format(rc))
 
     shutil.copy2(pacman_conf, os.path.join(root, "etc", "pacman.conf"))
     # DNS for the remaining steps that download packages inside the target

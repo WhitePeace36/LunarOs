@@ -8,7 +8,7 @@ HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
 HISTSIZE=50000
 SAVEHIST=50000
 setopt EXTENDED_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE \
-       HIST_REDUCE_BLANKS HIST_VERIFY SHARE_HISTORY INC_APPEND_HISTORY
+       HIST_REDUCE_BLANKS HIST_VERIFY SHARE_HISTORY
 
 # ---------------------------------------------------------------- options
 setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT \
@@ -105,7 +105,16 @@ alias ....='cd ../../..'
 
 # system
 alias update='sudo pacman -Syu'
-alias cleanup='sudo pacman -Rns $(pacman -Qtdq)'
+# remove packages that were installed as dependencies and are no longer needed
+cleanup() {
+    local -a orphans
+    orphans=(${(f)"$(pacman -Qtdq 2>/dev/null)"})
+    if (( ${#orphans} == 0 )); then
+        echo "No orphaned packages."
+        return 0
+    fi
+    sudo pacman -Rns $orphans
+}
 alias mirrors='sudo reflector --protocol https --latest 20 --age 12 --sort rate --save /etc/pacman.d/mirrorlist'
 alias jctl='journalctl -p 3 -xb'
 alias please='sudo $(fc -ln -1)'

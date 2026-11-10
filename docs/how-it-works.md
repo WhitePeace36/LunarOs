@@ -12,7 +12,7 @@ over packages with the same name in Arch's repositories.
 | `linux-lunar` | Default kernel, built from [linux-lunar](https://github.com/WhitePeace36/linux-lunar) |
 | `lunar-settings` | System settings, built from [lunar-settings](https://github.com/WhitePeace36/lunar-settings): sysctl, THP/tmpfiles, kernel parameters, zram, I/O schedulers, SATA/HDD rules, AMD GPU power limit and VRAM clock, limits, mDNS, `lunar-update-cmdline`, `lunar-sdboot-update`, `lunar-gpu-setup` |
 | `lunar-hooks` | pacman hooks: Lunar branding in `/etc/os-release`, "reboot required" notice after kernel/systemd updates |
-| `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login) |
+| `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login); the Lunar logo instead of the KDE logo on the application launcher (a Plasma update script, run once per user, that leaves an icon the user picked alone) |
 | `lunar-zsh-config` | zsh prompt, completion menu, `lsd`/`bat` aliases |
 | `ananicy-cpp-lunar` | Build of the [ananicy-cpp fork](https://github.com/WhitePeace36/ananicy-cpp) (replaces Arch's `ananicy-cpp`) |
 | `lunar-ananicy-rules` | ananicy-cpp rules from [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) |
