@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # Shared helpers for the Lunar build scripts. Sourced, not executed.
 
-set -euo pipefail
+set -Eeuo pipefail
+# With set -e a failing command ends the script; say where, instead of
+# stopping without a word
+# shellcheck disable=SC2154  # _rc is set inside the trap itself
+trap '_rc=$?; printf "\033[1;31m==> ERROR:\033[0m %s line %s: command failed (exit %s): %s\n" "$(basename "${BASH_SOURCE[0]:-$0}")" "$LINENO" "$_rc" "$BASH_COMMAND" >&2' ERR
 
 LUNAR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lunar.conf
@@ -139,12 +143,16 @@ srcinfo_version() {
     ' "$1"
 }
 
-# Version of a package in the local repo database (empty if not there)
+# Version of a package in the local repo database (empty if not there).
+# bsdtar exits with an error when the package isn't in the database, and
+# with SIGPIPE when awk stops early; neither may end the calling script
+# (set -e with pipefail), so its exit status is ignored.
 repo_version() {
     [[ -f "$DB_FILE" ]] || return 0
-    bsdtar -xOf "$DB_FILE" --include="$1-[0-9]*/desc" 2>/dev/null \
+    { bsdtar -xOf "$DB_FILE" --include="$1-[0-9]*/desc" 2>/dev/null || true; } \
         | awk -v want="$1" '
             /^%NAME%$/    { getline; name = $0 }
             /^%VERSION%$/ { getline; if (name == want) { print; exit } }
         '
+    return 0
 }

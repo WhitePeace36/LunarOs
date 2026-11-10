@@ -70,7 +70,9 @@ check_list() {  # <description> <package>...
     local what="$1" missing
     shift
     msg2 "checking $what"
-    missing="$(pacman --config "$profile/pacman.conf" --dbpath "$check_db" -Sp --print-format '%n' "$@" 2>&1 >/dev/null \
+    # pacman exits with an error when a target is missing: that is the case
+    # to report, so its exit status must not end the script (pipefail)
+    missing="$( { pacman --config "$profile/pacman.conf" --dbpath "$check_db" -Sp --print-format '%n' "$@" 2>&1 >/dev/null || true; } \
         | sed -n 's/^error: target not found: //p')"
     [[ -z "$missing" ]] || die "$what: packages no repo has (build them or remove them):
 $missing"
