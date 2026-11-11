@@ -1,15 +1,17 @@
 # Maintainer: Timon <timon2201@gmail.com>
 
 pkgname=lunar-kde-settings
-pkgver=1.1.0
-pkgrel=3
+pkgver=1.2.0
+pkgrel=1
 pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar logo on the application launcher, Dolphin view)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')
-depends=('plasma-workspace' 'breeze' 'breeze-gtk' 'kde-gtk-config' 'hicolor-icon-theme')
+depends=('plasma-workspace' 'breeze' 'breeze-gtk' 'kde-gtk-config' 'hicolor-icon-theme'
+         'attr' 'xdg-user-dirs')
 
 package() {
   cp -a --no-preserve=ownership "$startdir/files/." "$pkgdir/"
-  chmod 755 "$pkgdir/usr/lib/lunar/apply-breeze-dark"
+  chmod 755 "$pkgdir/usr/lib/lunar/apply-breeze-dark" \
+            "$pkgdir/usr/lib/lunar/dolphin-default-views"
 }

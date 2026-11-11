@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Lunar: Dolphin view defaults
+Exec=/usr/lib/lunar/dolphin-default-views
+OnlyShowIn=KDE;
+NoDisplay=true
+X-KDE-autostart-phase=1

@@ -1,0 +1,66 @@
+#!/bin/sh
+# Lunar's Dolphin view defaults that can't come from /etc, set once per user
+# at first login:
+#
+#  - Downloads folder: details list sorted by modification time, newest
+#    first, folders mixed in with the files, no groups ("Today",
+#    "Yesterday"). Dolphin's own default for that folder has the groups on.
+#    Written the way Dolphin stores a folder's view: as an extended attribute
+#    on the folder, or as a .directory file where the file system has none.
+#    A view the user already chose for the folder is left alone.
+#  - Default for all other folders (accounts created before this script
+#    existed have an older copy of the file from /etc/skel): name A-Z,
+#    folders first, hidden files last, no groups.
+#
+# Afterwards every folder keeps whatever the user sets in Dolphin.
+
+marker="${XDG_STATE_HOME:-$HOME/.local/state}/lunar/dolphin-default-views-1"
+[ -e "$marker" ] && exit 0
+
+attr='user.kde.fm.viewproperties#1'
+
+# --- default for folders without a view of their own -------------------------
+skel=/etc/skel/.local/share/dolphin/view_properties/global/.directory
+global="${XDG_DATA_HOME:-$HOME/.local/share}/dolphin/view_properties/global/.directory"
+if [ -f "$skel" ] && ! grep -q '^SortHiddenLast=' "$global" 2>/dev/null; then
+    mkdir -p "${global%/*}"
+    cp "$skel" "$global"
+fi
+
+# --- Downloads ------------------------------------------------------------------
+# make sure the folder exists under its (translated) name
+command -v xdg-user-dirs-update >/dev/null 2>&1 && xdg-user-dirs-update >/dev/null 2>&1
+dl=""
+command -v xdg-user-dir >/dev/null 2>&1 && dl="$(xdg-user-dir DOWNLOAD 2>/dev/null)"
+[ -n "$dl" ] || dl="$HOME/Downloads"
+dl="${dl%/}"
+
+# xdg-user-dir answers with the home folder when there is no Downloads folder
+if [ "$dl" != "${HOME%/}" ] && mkdir -p "$dl" 2>/dev/null; then
+    has_view=no
+    if command -v getfattr >/dev/null 2>&1 \
+            && [ -n "$(getfattr --only-values -n "$attr" "$dl" 2>/dev/null)" ]; then
+        has_view=yes
+    fi
+    grep -Eqs '^\[(Dolphin|Settings)\]' "$dl/.directory" && has_view=yes
+
+    if [ "$has_view" = no ]; then
+        props="[Dolphin]
+GroupedSorting=false
+SortFoldersFirst=false
+SortOrder=1
+SortRole=modificationtime
+Timestamp=$(date '+%Y,%-m,%-d,%-H,%-M,%-S')
+Version=4
+ViewMode=1
+
+[Settings]
+HiddenFilesShown=true
+"
+        if ! { command -v setfattr >/dev/null 2>&1 && setfattr -n "$attr" -v "$props" "$dl" 2>/dev/null; }; then
+            printf '%s' "$props" >> "$dl/.directory"
+        fi
+    fi
+fi
+
+mkdir -p "${marker%/*}" && touch "$marker"

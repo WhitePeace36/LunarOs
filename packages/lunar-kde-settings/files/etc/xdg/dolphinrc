@@ -1,10 +1,12 @@
-# Lunar: Dolphin shows every folder the same way: as a list with details
-# (name, size, modified) at the smallest zoom, folders that expand into a
-# tree, hidden files visible. The view itself (details, hidden files) is in
-# /etc/skel/.local/share/dolphin/view_properties/global/.directory, which
-# Dolphin only reads from the user's home.
+# Lunar: Dolphin remembers the view of every folder on its own (sorting,
+# view mode, hidden files, ...). A folder nobody changed yet uses the
+# defaults in ~/.local/share/dolphin/view_properties/global/.directory
+# (from /etc/skel; Dolphin only reads it from the user's home): a list with
+# details, sorted by name A-Z, folders first, hidden files shown but last.
+# The Downloads folder gets its own view at first login
+# (/usr/lib/lunar/dolphin-default-views): newest first, no groups.
 [General]
-GlobalViewProps=true
+GlobalViewProps=false
 
 # IconSize is the zoom without previews, PreviewSize the one with previews
 [DetailsMode]
