@@ -22,3 +22,6 @@ packages/*/rules/
 *.key
 __pycache__/
 
+packages/*/sysmon/
+packages/*/ac/
+/*.patch

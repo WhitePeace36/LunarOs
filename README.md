@@ -21,6 +21,9 @@ change. Its own packages, and the few AUR packages it ships, come from the
   (Plasma and GTK apps), the Lunar logo on the application launcher
 - PipeWire for sound, with [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator)
   and EasyEffects
+- [Sysmon](https://github.com/WhitePeace36/Sysmon) as the system monitor
+  (performance graphs, processes, systemd services), opened with
+  Ctrl+Shift+Esc
 - Wi-Fi, Bluetooth and printer/scanner discovery on the network (mDNS) work
   out of the box
 - zsh with the prompt `user@host:path(branch⚡) »`, `lsd`/`bat` aliases
@@ -96,6 +99,7 @@ the sound chip stay powered.
 | Show the kernel parameters | `lunar-update-cmdline --print` |
 | Switch graphics drivers after a GPU change | `sudo lunar-gpu-setup` (`--print` shows what it would do) |
 | Edit the ananicy-cpp rules | AnanicyConfigurator |
+| Open the system monitor (Sysmon) | Ctrl+Shift+Esc |
 | Check the scheduler | `systemctl status elara ananicy-cpp` |
 
 Files in `/etc` always take precedence over Lunar's defaults in `/usr/lib`,
@@ -113,6 +117,7 @@ whenever a kernel is installed, updated or removed.
 | [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) | Lunar's ananicy-cpp rules |
 | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) | GUI for the ananicy-cpp rules |
 | [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator) | GUI for PipeWire settings |
+| [Sysmon](https://github.com/WhitePeace36/Sysmon) | System monitor |
 | [lunar-repo](https://github.com/WhitePeace36/lunar-repo) | The `[lunar]` package repository |
 
 This repository holds the packaging (PKGBUILDs), the installer

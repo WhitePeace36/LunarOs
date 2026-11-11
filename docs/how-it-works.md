@@ -19,6 +19,7 @@ over packages with the same name in Arch's repositories.
 | `elara` | [Elara](https://github.com/WhitePeace36/Elara) scheduler, enabled by default; conflicts with `scx-manager` |
 | `pipewire-configurator-simple` | [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator) |
 | `ananicy-configurator` | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) |
+| `sysmon` | [Sysmon](https://github.com/WhitePeace36/Sysmon), the system monitor (installed instead of KDE's `plasma-systemmonitor`); Lunar's package gives it the global shortcut Ctrl+Shift+Esc |
 | `lunar-calamares` | Installer: upstream Calamares 3.3 with Lunar's modules, configuration and branding |
 | `lunar-keyring`, `lunar-mirrorlist` | Signing key and server of `[lunar]` |
 

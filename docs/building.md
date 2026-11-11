@@ -96,7 +96,7 @@ the next time `build-aur.sh` or `build-packages.sh` runs. Run
 | Component | Change | Then |
 |---|---|---|
 | Kernel | `_version` in `packages/linux-lunar/lunar-distro.cfg`, `_commit` in its `prepare.sh` | `scripts/build-packages.sh linux-lunar` |
-| Elara, ananicy-cpp, AnanicyConfigurator, PipewireSimpleConfigurator | `_commit` in the package's PKGBUILD | `scripts/build-packages.sh <name>` |
+| Elara, ananicy-cpp, AnanicyConfigurator, PipewireSimpleConfigurator, Sysmon | `_commit` in the package's PKGBUILD | `scripts/build-packages.sh <name>` |
 | Settings | the files and `pkgver` in [lunar-settings](https://github.com/WhitePeace36/lunar-settings), then `_commit` in `packages/lunar-settings/prepare.sh` | `scripts/build-packages.sh lunar-settings` |
 | ananicy rules | `_commit` in `packages/lunar-ananicy-rules/PKGBUILD` | `scripts/build-packages.sh lunar-ananicy-rules` |
 | Calamares | `pkgver` and `_commit` (a release tag) in `packages/lunar-calamares/PKGBUILD`; compare upstream's module configs with `config/modules` | `scripts/build-packages.sh lunar-calamares` |

@@ -12,6 +12,7 @@ lunar-ananicy-rules
 elara
 pipewire-configurator-simple
 ananicy-configurator
+sysmon
 lunar-settings
 lunar-kde-settings
 lunar-zsh-config

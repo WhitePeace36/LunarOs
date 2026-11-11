@@ -1,0 +1,48 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# Sysmon - Lunar's system monitor (performance graphs, processes, systemd
+# services). Built from github.com/WhitePeace36/Sysmon at a pinned commit
+# (same build as the repo's own PKGBUILD, which builds a local checkout).
+#
+# Lunar installs it instead of KDE's plasma-systemmonitor and starts it with
+# Ctrl+Shift+Esc: package() adds X-KDE-Shortcuts to sysmon.desktop, which
+# Plasma (kglobalacceld) registers as the default global shortcut of the
+# application. Users change it in System Settings > Keyboard > Shortcuts.
+#
+# To update: set _commit to the new commit, pkgver to the project() VERSION in
+# CMakeLists.txt, and reset pkgrel to 1.
+
+pkgname=sysmon
+_commit=cad09ace68a7cfc089c09d2734fed7689489341a
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='System monitor with performance graphs, process lists and systemd services'
+arch=('x86_64')
+url='https://github.com/WhitePeace36/Sysmon'
+license=('GPL-2.0-only')
+depends=('qt6-base' 'gcc-libs' 'glibc' 'hicolor-icon-theme')
+makedepends=('git' 'cmake')
+optdepends=('polkit: signal processes and manage services that need administrator rights'
+            'hwdata: GPU model names'
+            'nvidia-utils: NVIDIA GPU statistics')
+source=("sysmon::git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+_shortcut='Ctrl+Shift+Esc'
+
+build() {
+  cmake -S sysmon -B build \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+
+  local desktop="$pkgdir/usr/share/applications/sysmon.desktop"
+  sed -i '/^X-KDE-Shortcuts=/d' "$desktop"
+  sed -i "/^\[Desktop Entry\]\$/a X-KDE-Shortcuts=$_shortcut" "$desktop"
+  grep -q "^X-KDE-Shortcuts=$_shortcut\$" "$desktop"
+}
