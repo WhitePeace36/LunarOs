@@ -2,14 +2,15 @@
 #
 # Ananicy Configurator - Qt GUI to edit the ananicy-cpp types, rules and
 # ananicy.conf in /etc/ananicy.d (saves through pkexec, restarts the service).
-# Built from github.com/WhitePeace36/AnanicyConfigurator at a pinned commit
+# Built from the release tag v$pkgver of github.com/WhitePeace36/AnanicyConfigurator
 # (same build as the repo's own PKGBUILD, which builds a local checkout).
 #
-# To update: set _commit to the new commit and reset pkgrel to 1.
+# To release a new version: tag it vX.Y.Z in the project's repo and push the
+# tag, then set pkgver here to X.Y.Z and pkgrel to 1. For a change to this
+# PKGBUILD only, raise pkgrel.
 
 pkgname=ananicy-configurator
-_commit=0f4f7af25239fe8bc75a05b02f3a98bc1d88c820
-pkgver=1.0.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc='Qt GUI to edit ananicy / ananicy-cpp types, rules and ananicy.conf'
 arch=('x86_64')
@@ -18,25 +19,9 @@ license=('GPL-2.0-only')
 depends=('qt6-base' 'polkit' 'systemd' 'hicolor-icon-theme' 'gcc-libs' 'glibc')
 makedepends=('git' 'cmake')
 optdepends=('ananicy-cpp: the daemon this program configures')
-source=("ac::git+${url}.git#commit=${_commit}")
+source=("ac::git+${url}.git#tag=v${pkgver}")
 sha256sums=('SKIP')
 
-# same scheme as upstream: 1.0.0 on the v1.0.0 tag, 1.0.0.r<n>.g<hash> otherwise
-pkgver() {
-  cd ac
-  local ver count
-  ver=$(sed -n 's/^project([^)]*VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
-  if git tag --points-at HEAD | grep -qx "v$ver"; then
-    printf '%s' "$ver"
-    return
-  fi
-  if git rev-parse -q --verify "refs/tags/v$ver" >/dev/null; then
-    count=$(git rev-list --count "v$ver..HEAD")
-  else
-    count=$(git rev-list --count HEAD)
-  fi
-  printf '%s.r%s.g%s' "$ver" "$count" "$(git rev-parse --short=7 HEAD)"
-}
 
 build() {
   cmake -S ac -B build \

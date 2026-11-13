@@ -96,9 +96,9 @@ the next time `build-aur.sh` or `build-packages.sh` runs. Run
 | Component | Change | Then |
 |---|---|---|
 | Kernel | `_version` in `packages/linux-lunar/lunar-distro.cfg`, `_commit` in its `prepare.sh` | `scripts/build-packages.sh linux-lunar` |
-| Elara, ananicy-cpp, AnanicyConfigurator, PipewireSimpleConfigurator, Sysmon | `_commit` in the package's PKGBUILD | `scripts/build-packages.sh <name>` |
-| Settings | the files and `pkgver` in [lunar-settings](https://github.com/WhitePeace36/lunar-settings), then `_commit` in `packages/lunar-settings/prepare.sh` | `scripts/build-packages.sh lunar-settings` |
-| ananicy rules | `_commit` in `packages/lunar-ananicy-rules/PKGBUILD` | `scripts/build-packages.sh lunar-ananicy-rules` |
+| Elara, AnanicyConfigurator, PipewireSimpleConfigurator, Sysmon, ananicy rules | release the version in the project's repo (tag `vX.Y.Z`, push the tag), then `pkgver=X.Y.Z` and `pkgrel=1` in the package's PKGBUILD | `scripts/build-packages.sh <name>` |
+| ananicy-cpp | `_commit` in `packages/ananicy-cpp-lunar/PKGBUILD` | `scripts/build-packages.sh --force ananicy-cpp-lunar` |
+| Settings | the files and `pkgver` in [lunar-settings](https://github.com/WhitePeace36/lunar-settings), tag `v<pkgver>` and push it, then `_tag` in `packages/lunar-settings/prepare.sh` | `scripts/build-packages.sh lunar-settings` |
 | Calamares | `pkgver` and `_commit` (a release tag) in `packages/lunar-calamares/PKGBUILD`; compare upstream's module configs with `config/modules` | `scripts/build-packages.sh lunar-calamares` |
 | AUR packages | nothing | `scripts/build-aur.sh` (rebuilds what changed) |
 | ISO profile | compare `iso/` with a newer archiso `configs/releng` | `scripts/build-iso.sh` |

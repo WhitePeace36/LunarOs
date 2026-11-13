@@ -1,16 +1,17 @@
 # Maintainer: Timon <timon2201@gmail.com>
 #
 # Elara - sched_ext scheduler that follows the nice values ananicy-cpp sets.
-# Built from github.com/WhitePeace36/Elara at a pinned commit, with the
+# Built from the release tag v$pkgver of github.com/WhitePeace36/Elara, with the
 # repo's own CMake install rules (binary, elara.service, elara-hook) and
 # its committed include/vmlinux.h (Linux 7.3+ types for the BPF part).
 # To build against another vmlinux.h, set ELARA_VMLINUX_H=/path/to/vmlinux.h.
 #
-# To update: set _commit to the new commit and reset pkgrel to 1.
+# To release a new version: tag it vX.Y.Z in the project's repo and push the
+# tag, then set pkgver here to X.Y.Z and pkgrel to 1. For a change to this
+# PKGBUILD only, raise pkgrel.
 
 pkgname=elara
-_commit=ce8803431b0f16366850d563bf10ce2be666000c
-pkgver=0.r42.gce88034
+pkgver=1.0.0
 pkgrel=1
 pkgdesc='sched_ext CPU scheduler, tuned by nice values, for stable frame times'
 arch=('x86_64')
@@ -24,13 +25,9 @@ replaces=('scx-elara')
 conflicts=('scx-elara' 'scx-manager')
 options=('!lto' '!debug')
 install=elara.install
-source=("elara::git+${url}.git#commit=${_commit}")
+source=("elara::git+${url}.git#tag=v${pkgver}")
 sha256sums=('SKIP')
 
-pkgver() {
-  cd elara
-  printf '0.r%s.g%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
-}
 
 prepare() {
   cd elara

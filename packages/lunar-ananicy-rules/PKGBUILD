@@ -4,12 +4,12 @@
 # github.com/WhitePeace36/ananicy-rules goes to /etc/ananicy.d/ with the same
 # layout (ananicy.conf, 99-types.types, 99-rules/*.rules).
 #
-# To update: push to the rules repo, set _commit to the new commit, reset
-# pkgrel to 1, then scripts/build-packages.sh lunar-ananicy-rules.
+# To release a new version: tag it vX.Y.Z in the project's repo and push the
+# tag, then set pkgver here to X.Y.Z and pkgrel to 1. For a change to this
+# PKGBUILD only, raise pkgrel.
 
 pkgname=lunar-ananicy-rules
-_commit=c3ef34fa90a0356d98795318c8c8f67cd0a79d5c
-pkgver=r2.gc3ef34f
+pkgver=1.0.0
 pkgrel=1
 pkgdesc='Lunar - ananicy-cpp rules tuned for the Elara scheduler'
 arch=('any')
@@ -19,13 +19,9 @@ makedepends=('git')
 provides=('ananicy-rules')
 conflicts=('ananicy-rules' 'ananicy-rules-git' 'ananicy-cpp-rules' 'ananicy-rules-custom')
 backup=('etc/ananicy.d/ananicy.conf')
-source=("rules::git+${url}.git#commit=${_commit}")
+source=("rules::git+${url}.git#tag=v${pkgver}")
 sha256sums=('SKIP')
 
-pkgver() {
-  cd rules
-  printf 'r%s.g%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
-}
 
 check() {
   [ -f rules/ananicy.d/ananicy.conf ] || { echo "ananicy.d/ananicy.conf missing in the rules repo" >&2; return 1; }
