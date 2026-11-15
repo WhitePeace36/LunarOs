@@ -12,7 +12,7 @@
 
 pkgname=elara
 pkgver=1.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='sched_ext CPU scheduler, tuned by nice values, for stable frame times'
 arch=('x86_64')
 url='https://github.com/WhitePeace36/Elara'
@@ -22,7 +22,7 @@ makedepends=('git' 'cmake' 'clang' 'lld' 'bpf' 'pkgconf')
 optdepends=('ananicy-cpp: sets the nice values Elara schedules by')
 provides=('scx-elara')
 replaces=('scx-elara')
-conflicts=('scx-elara' 'scx-manager')
+conflicts=('scx-elara')
 options=('!lto' '!debug')
 install=elara.install
 source=("elara::git+${url}.git#tag=v${pkgver}")

@@ -2,7 +2,7 @@
 
 pkgname=lunar-zsh-config
 pkgver=1.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Lunar - zsh configuration (prompt, completion menu, modern CLI aliases)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
@@ -26,6 +26,8 @@ depends=(
   'noto-fonts-emoji'
   'reflector'
 )
+# CachyOS's zsh config installs the same /etc/skel/.zshrc
+conflicts=('cachyos-zsh-config')
 backup=('etc/skel/.zshrc')
 
 package() {
