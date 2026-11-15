@@ -19,7 +19,7 @@ change. Its own packages, and the few AUR packages it ships, come from the
 **Desktop**
 - KDE Plasma on Wayland, Plasma Login Manager, Breeze Dark throughout
   (Plasma and GTK apps), the Lunar logo on the application launcher
-- PipeWire for sound, with [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator)
+- PipeWire for sound, with [Pipewire Configurator](https://github.com/WhitePeace36/PipewireConfigurator)
   and EasyEffects
 - [Sysmon](https://github.com/WhitePeace36/Sysmon) as the system monitor
   (performance graphs, processes, systemd services), opened with
@@ -116,7 +116,7 @@ whenever a kernel is installed, updated or removed.
 | [ananicy-cpp](https://github.com/WhitePeace36/ananicy-cpp) | ananicy-cpp fork |
 | [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) | Lunar's ananicy-cpp rules |
 | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) | GUI for the ananicy-cpp rules |
-| [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator) | GUI for PipeWire settings |
+| [PipewireConfigurator](https://github.com/WhitePeace36/PipewireConfigurator) | GUI for PipeWire settings |
 | [Sysmon](https://github.com/WhitePeace36/Sysmon) | System monitor |
 | [lunar-repo](https://github.com/WhitePeace36/lunar-repo) | The `[lunar]` package repository |
 

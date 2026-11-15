@@ -17,7 +17,7 @@ over packages with the same name in Arch's repositories.
 | `ananicy-cpp-lunar` | Build of the [ananicy-cpp fork](https://github.com/WhitePeace36/ananicy-cpp) (replaces Arch's `ananicy-cpp`) |
 | `lunar-ananicy-rules` | ananicy-cpp rules from [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) |
 | `elara` | [Elara](https://github.com/WhitePeace36/Elara) scheduler, enabled by default; conflicts with `scx-manager` |
-| `pipewire-configurator-simple` | [PipewireSimpleConfigurator](https://github.com/WhitePeace36/PipewireSimpleConfigurator) |
+| `pipewire-configurator` | [PipewireConfigurator](https://github.com/WhitePeace36/PipewireConfigurator) |
 | `ananicy-configurator` | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) |
 | `sysmon` | [Sysmon](https://github.com/WhitePeace36/Sysmon), the system monitor (installed instead of KDE's `plasma-systemmonitor`); Lunar's package gives it the global shortcut Ctrl+Shift+Esc |
 | `lunar-calamares` | Installer: upstream Calamares 3.3 with Lunar's modules, configuration and branding |

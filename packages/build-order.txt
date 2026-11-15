@@ -10,7 +10,7 @@ linux-lunar
 ananicy-cpp-lunar
 lunar-ananicy-rules
 elara
-pipewire-configurator-simple
+pipewire-configurator
 ananicy-configurator
 sysmon
 lunar-settings
