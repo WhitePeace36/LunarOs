@@ -11,7 +11,7 @@
 set -euo pipefail
 
 _repo="https://github.com/WhitePeace36/linux-lunar.git"
-_commit="ccea1762b61b5b412d509ed46978cf4c358094e6"
+_commit="937f371054ab301f4f315880db807238ffb5ddef"
 
 here="$(cd "$(dirname "$0")" && pwd)"
 work="${1:?usage: prepare.sh <work-dir>}"
