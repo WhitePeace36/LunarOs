@@ -11,7 +11,7 @@
 # PKGBUILD only, raise pkgrel.
 
 pkgname=pipewire-configurator
-pkgver=2.1.0
+pkgver=2.2.0
 pkgrel=1
 pkgdesc='GUI tool for PipeWire and WirePlumber settings'
 arch=('x86_64')
