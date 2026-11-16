@@ -47,7 +47,7 @@ done < <(lunar_servers)
 stage="$BUILD_DIR/publish"
 rm -rf "$stage"; mkdir -p "$stage"
 cp -L "$REPO_DIR"/* "$stage/"
-rm -f "$stage"/*.old    # repo-add's backups of the previous database
+rm -f "$stage"/*.old "$stage"/*.old.sig    # repo-add's backups of the previous database
 
 mapfile -t current < <(cd "$stage" && ls -1)
 
