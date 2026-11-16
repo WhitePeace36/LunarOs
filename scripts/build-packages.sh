@@ -37,8 +37,13 @@ if [[ ${#wanted[@]} -eq 0 ]]; then
     done
 fi
 
-# packages/lunar-mirrorlist: Server line from lunar.conf
-sed -i "s|^Server = .*|Server = $LUNAR_REPO_URL|" "$LUNAR_ROOT/packages/lunar-mirrorlist/lunar-mirrorlist"
+# packages/lunar-mirrorlist: Server lines from lunar.conf
+mirrorlist="$LUNAR_ROOT/packages/lunar-mirrorlist/lunar-mirrorlist"
+{
+    sed '/^Server = /,$d' "$mirrorlist"
+    lunar_servers | sed 's/^/Server = /'
+} > "$mirrorlist.new"
+mv "$mirrorlist.new" "$mirrorlist"
 
 # packages/lunar-keyring needs the key files from make-key.sh
 if [[ " ${wanted[*]} " == *" lunar-keyring "* ]] && [[ ! -s "$LUNAR_ROOT/packages/lunar-keyring/lunar.gpg" ]]; then

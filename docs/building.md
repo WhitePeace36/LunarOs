@@ -28,9 +28,10 @@ Build output (`build/`, `repo/`, `iso/out/`) is not committed.
 ## Setup
 
 ```sh
-sudo pacman -S --needed devtools archiso squashfs-tools github-cli
+sudo pacman -S --needed devtools archiso squashfs-tools github-cli jq
 gpg --locate-keys torvalds@kernel.org gregkh@kernel.org   # kernel tarball signatures
-gh auth login                                             # for publish.sh
+gh auth login                                             # for publish.sh (GitHub)
+export GITLAB_TOKEN=glpat-...                             # for publish.sh (GitLab), or glab auth login
 scripts/make-key.sh
 ```
 
@@ -41,8 +42,16 @@ unsigned and only test builds work.
 
 The packages are published as assets of the release `x86_64` in the public
 GitHub repository [lunar-repo](https://github.com/WhitePeace36/lunar-repo)
-(`LUNAR_REPO_URL` in `lunar.conf`). `publish.sh` creates the release on the
-first run; the repository itself must exist.
+(`LUNAR_REPO_URL` in `lunar.conf`), and as a mirror in the generic package
+registry (package `lunar`, version `x86_64`) of the public GitLab project
+[lunar-repo](https://gitlab.com/WhitePeace/lunar-repo) (`LUNAR_REPO_MIRRORS`).
+`lunar-mirrorlist` lists both, GitHub first; pacman uses GitLab when GitHub
+fails. `publish.sh` creates the GitHub release and the GitLab package on the
+first run; the repositories themselves must exist. The GitLab token needs the
+`api` scope and the Maintainer role in the project (a project access token
+works too), and the project must allow duplicate generic packages (Settings >
+Packages and registries, on by default), since the database is uploaded again
+under the same name with every publish.
 
 ## Building
 
@@ -65,8 +74,10 @@ scripts/build-iso.sh         # ISO in iso/out/
 - `build-packages.sh` builds everything in `build-order.txt` (or the
   packages given as arguments) whose version isn't in the repository yet,
   signs it and adds it to `repo/x86_64`. The kernel takes 30 to 90 minutes.
-- `publish.sh` uploads new or changed packages and the database to the release and
-  deletes assets of versions that are no longer in the repository.
+- `publish.sh` uploads new or changed packages and then the database to every
+  server (GitHub and GitLab; `publish.sh gitlab` for one of them) and deletes
+  files of versions that are no longer in the repository. A server that fails
+  doesn't stop the others.
 - `build-iso.sh` uses the local repository if it exists (`--remote` for the
   published one). Before building, it checks that every package in
   `iso/packages.x86_64` and in the installer's package lists

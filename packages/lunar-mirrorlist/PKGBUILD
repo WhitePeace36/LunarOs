@@ -1,7 +1,7 @@
 # Maintainer: Timon <timon2201@gmail.com>
 
 pkgname=lunar-mirrorlist
-pkgver=1
+pkgver=2
 pkgrel=1
 pkgdesc='Lunar - mirror list for the [lunar] repository'
 arch=('any')

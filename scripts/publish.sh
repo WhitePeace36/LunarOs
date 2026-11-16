@@ -1,28 +1,48 @@
 #!/usr/bin/env bash
-# Upload repo/x86_64 to the GitHub release that LUNAR_REPO_URL points at
-# (https://github.com/<owner>/<repo>/releases/download/<tag>).
+# Upload repo/x86_64 to every server of the [lunar] repository: LUNAR_REPO_URL
+# and the mirrors in LUNAR_REPO_MIRRORS (lunar.conf). Two kinds of server:
 #
-#   scripts/publish.sh
+#   GitHub release    https://github.com/<owner>/<repo>/releases/download/<tag>
+#                     needs the GitHub CLI (github-cli), `gh auth login`
+#   GitLab generic    https://gitlab.com/api/v4/projects/<owner>%2F<repo>/packages/generic/<name>/<version>
+#   package registry  needs curl and jq, and a GitLab access token with the
+#                     "api" scope (Maintainer role or higher) in GITLAB_TOKEN,
+#                     or glab (`glab auth login`)
 #
-# Needs the GitHub CLI (github-cli) logged in with `gh auth login`.
-# The repo database symlinks (lunar.db, lunar.files) are uploaded as real
-# files, since release assets can't be symlinks.
+#   scripts/publish.sh            all servers
+#   scripts/publish.sh gitlab     only servers whose URL contains "gitlab"
+#                                 (any part of the URL works: github, ...)
+#
+# Each server gets the new or changed package files first and the database
+# after them, so a client never sees a database that lists packages the
+# server doesn't have yet. Then files that are no longer in the repository
+# (old package versions) are deleted. The repo database symlinks (lunar.db,
+# lunar.files) are uploaded as real files, since neither server has symlinks.
+# A server that fails doesn't stop the others; the script then exits with 1.
 
 . "$(dirname "$0")/common.sh"
-need github-cli gh
 
-[[ "$LUNAR_REPO_URL" =~ ^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/?$ ]] \
-    || die "LUNAR_REPO_URL is not a GitHub release URL: $LUNAR_REPO_URL"
-gh_repo="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
-tag="${BASH_REMATCH[3]}"
+filters=()
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*) die "unknown option $arg" ;;
+        *) filters+=("$arg") ;;
+    esac
+done
 
 [[ -f "$DB_FILE" ]] || die "no repo database at $DB_FILE - build packages first"
 
-if ! gh release view "$tag" -R "$gh_repo" >/dev/null 2>&1; then
-    msg "Creating release $tag in $gh_repo"
-    gh release create "$tag" -R "$gh_repo" --title "Lunar repository ($tag)" \
-        --notes "pacman repository for Lunar. Server = $LUNAR_REPO_URL"
-fi
+targets=()
+while read -r url; do
+    if [[ ${#filters[@]} -gt 0 ]]; then
+        hit=0
+        for f in "${filters[@]}"; do [[ "$url" == *"$f"* ]] && hit=1; done
+        [[ $hit -eq 1 ]] || continue
+    fi
+    targets+=("$url")
+done < <(lunar_servers)
+[[ ${#targets[@]} -gt 0 ]] || die "no server in lunar.conf matches: ${filters[*]}"
 
 stage="$BUILD_DIR/publish"
 rm -rf "$stage"; mkdir -p "$stage"
@@ -31,49 +51,193 @@ rm -f "$stage"/*.old    # repo-add's backups of the previous database
 
 mapfile -t current < <(cd "$stage" && ls -1)
 
-# name, size and (where GitHub reports one) sha256 digest of every asset
-published=()
-declare -A pub_size=() pub_digest=()
-while IFS=$'\t' read -r name size digest; do
-    [[ -n "$name" ]] || continue
-    published+=("$name")
-    pub_size[$name]="$size"
-    pub_digest[$name]="${digest:-}"
-done < <(gh release view "$tag" -R "$gh_repo" --json assets \
-            --jq '.assets[] | [.name, (.size | tostring), (.digest // "")] | @tsv')
+is_db() {
+    case "$1" in
+        "$LUNAR_REPO_NAME".db|"$LUNAR_REPO_NAME".db.*|"$LUNAR_REPO_NAME".files|"$LUNAR_REPO_NAME".files.*) return 0 ;;
+    esac
+    return 1
+}
 
-# The asset exists with the same content. A package that was built again
-# under the same version (--force, or a build on another machine) has the
-# same name but other contents, and the database lists the new checksum and
-# signature: it must be uploaded again, or pacman rejects the download.
+in_current() { [[ " ${current[*]} " == *" $1 "* ]]; }
+
+# Filled by each server before select_uploads: size and (where the server
+# reports one) sha256 of every file it has.
+declare -A pub_size=() pub_sha256=()
+
+# The server has the file with the same content. A package that was built
+# again under the same version (--force, or a build on another machine) has
+# the same name but other contents, and the database lists the new checksum
+# and signature: it must be uploaded again, or pacman rejects the download.
 is_published() {
     local f="$1"
     [[ -n "${pub_size[$f]:-}" ]] || return 1
-    if [[ "${pub_digest[$f]}" == sha256:* ]]; then
-        [[ "sha256:$(sha256sum "$stage/$f" | cut -d' ' -f1)" == "${pub_digest[$f]}" ]]
+    if [[ -n "${pub_sha256[$f]:-}" ]]; then
+        [[ "$(sha256sum "$stage/$f" | cut -d' ' -f1)" == "${pub_sha256[$f]}" ]]
     else
         [[ "$(stat -c %s "$stage/$f")" == "${pub_size[$f]}" ]]
     fi
 }
 
-# Only new or changed package files are uploaded. The database files change
-# with every build and always are.
-uploads=()
-for f in "${current[@]}"; do
-    case "$f" in
-        "$LUNAR_REPO_NAME".db|"$LUNAR_REPO_NAME".db.*|"$LUNAR_REPO_NAME".files|"$LUNAR_REPO_NAME".files.*)
-            uploads+=("$stage/$f") ;;
-        *) is_published "$f" || uploads+=("$stage/$f") ;;
+# Fills pkg_uploads (new or changed package files) and db_uploads (the
+# database files: they change with every build and are always uploaded).
+select_uploads() {
+    local f
+    pkg_uploads=(); db_uploads=()
+    for f in "${current[@]}"; do
+        if is_db "$f"; then
+            db_uploads+=("$f")
+        elif ! is_published "$f"; then
+            pkg_uploads+=("$f")
+        fi
+    done
+    msg2 "uploading ${#pkg_uploads[@]} of $(( ${#current[@]} - ${#db_uploads[@]} )) package files, and the database"
+}
+
+# --- GitHub release -------------------------------------------------------------
+publish_github() {
+    local url="$1" gh_repo tag name size digest asset
+    need github-cli gh
+    [[ "$url" =~ ^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/?$ ]] \
+        || die "not a GitHub release URL: $url"
+    gh_repo="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+    tag="${BASH_REMATCH[3]}"
+
+    if ! gh release view "$tag" -R "$gh_repo" >/dev/null 2>&1; then
+        msg2 "creating release $tag in $gh_repo"
+        gh release create "$tag" -R "$gh_repo" --title "Lunar repository ($tag)" \
+            --notes "pacman repository for Lunar. Server = $url"
+    fi
+
+    local published=()
+    while IFS=$'\t' read -r name size digest; do
+        [[ -n "$name" ]] || continue
+        published+=("$name")
+        pub_size[$name]="$size"
+        [[ "$digest" == sha256:* ]] && pub_sha256[$name]="${digest#sha256:}"
+    done < <(gh release view "$tag" -R "$gh_repo" --json assets \
+                --jq '.assets[] | [.name, (.size | tostring), (.digest // "")] | @tsv')
+
+    select_uploads
+    if [[ ${#pkg_uploads[@]} -gt 0 ]]; then
+        (cd "$stage" && gh release upload "$tag" -R "$gh_repo" --clobber "${pkg_uploads[@]}")
+    fi
+    (cd "$stage" && gh release upload "$tag" -R "$gh_repo" --clobber "${db_uploads[@]}")
+
+    for asset in "${published[@]}"; do
+        in_current "$asset" && continue
+        msg2 "deleting old asset $asset"
+        gh release delete-asset "$tag" "$asset" -R "$gh_repo" -y
+    done
+}
+
+# --- GitLab generic package registry ---------------------------------------------
+gitlab_token() {  # <host>
+    if [[ -n "${GITLAB_TOKEN:-}" ]]; then
+        printf '%s' "$GITLAB_TOKEN"
+    elif command -v glab >/dev/null 2>&1; then
+        glab config get token --host "$1" 2>/dev/null || true
+    fi
+}
+
+# curl with the token. It goes to curl through a file descriptor, not on the
+# command line, where other users could read it (ps).
+gl() {
+    curl -sS --fail-with-body --retry 3 -H @<(printf 'PRIVATE-TOKEN: %s\n' "$gl_token") "$@"
+}
+
+# Writes every file of the package gl_pkg/gl_ver to gl_listing, oldest first:
+# id, name, size, sha256, upload time. Sets gl_pkg_id (empty until the first
+# upload creates the package).
+gitlab_files() {
+    local page=1 resp
+    : > "$gl_listing"
+    # fetched before jq reads it, so that an HTTP error (bad token, no
+    # access) ends the upload here with curl's message
+    resp="$(gl "$gl_api/projects/$gl_project/packages?package_type=generic&package_name=$gl_pkg&per_page=100")"
+    gl_pkg_id="$(jq -r --arg n "$gl_pkg" --arg v "$gl_ver" \
+        '[.[] | select(.name == $n and .version == $v) | .id][0] // empty' <<<"$resp")"
+    [[ -n "$gl_pkg_id" ]] || return 0
+    while :; do
+        resp="$(gl "$gl_api/projects/$gl_project/packages/$gl_pkg_id/package_files?per_page=100&page=$page")"
+        [[ "$(jq length <<<"$resp")" -gt 0 ]] || break
+        jq -r '.[] | [(.id | tostring), .file_name, (.size | tostring), (.file_sha256 // ""), .created_at] | @tsv' \
+            <<<"$resp" >> "$gl_listing"
+        page=$((page + 1))
+    done
+    sort -t$'\t' -k5,5 -k1,1n -o "$gl_listing" "$gl_listing"
+}
+
+publish_gitlab() {
+    local url="$1" f id name size sha
+    need curl curl
+    need jq jq
+    [[ "$url" =~ ^(https://([^/]+)/api/v4)/projects/([^/]+)/packages/generic/([^/]+)/([^/]+)/?$ ]] \
+        || die "not a GitLab generic package URL: $url"
+    gl_api="${BASH_REMATCH[1]}"
+    gl_project="${BASH_REMATCH[3]}"
+    gl_pkg="${BASH_REMATCH[4]}"
+    gl_ver="${BASH_REMATCH[5]}"
+    gl_listing="$BUILD_DIR/publish-gitlab.tsv"
+    gl_token="$(gitlab_token "${BASH_REMATCH[2]}")"
+    [[ -n "$gl_token" ]] || die "no GitLab token for ${BASH_REMATCH[2]}: set GITLAB_TOKEN or run 'glab auth login'"
+
+    for f in "${current[@]}"; do
+        # GitLab's rule for generic package file names
+        [[ "$f" =~ ^[A-Za-z0-9._~+-]+$ && "$f" != *..* ]] \
+            || die "GitLab doesn't accept the file name $f"
+    done
+
+    gitlab_files
+    # A file uploaded again under the same name is stored beside the old one,
+    # and downloads get the newest: compare with that one (the list is
+    # oldest first).
+    while IFS=$'\t' read -r id name size sha _; do
+        pub_size[$name]="$size"
+        pub_sha256[$name]="$sha"
+    done < "$gl_listing"
+
+    select_uploads
+    for f in "${pkg_uploads[@]}" "${db_uploads[@]}"; do
+        gl --upload-file "$stage/$f" "$gl_api/projects/$gl_project/packages/generic/$gl_pkg/$gl_ver/$f" >/dev/null
+    done
+
+    # delete files that are no longer in the repo, and the older copies of
+    # files that were uploaded again
+    gitlab_files
+    local -A newest=()
+    while IFS=$'\t' read -r id name _; do newest[$name]="$id"; done < "$gl_listing"
+    while IFS=$'\t' read -r id name _; do
+        if ! in_current "$name"; then
+            msg2 "deleting old file $name"
+        elif [[ "${newest[$name]}" == "$id" ]]; then
+            continue
+        fi
+        gl -X DELETE "$gl_api/projects/$gl_project/packages/$gl_pkg_id/package_files/$id" >/dev/null
+    done < "$gl_listing"
+}
+
+# ---------------------------------------------------------------------------------
+failed=()
+for url in "${targets[@]}"; do
+    msg "Publishing to $url"
+    case "$url" in
+        https://github.com/*) kind=github ;;
+        https://*/api/v4/projects/*/packages/generic/*) kind=gitlab ;;
+        *) warn "don't know how to upload to $url"; failed+=("$url"); continue ;;
     esac
+    # In a subshell, so an error ends only this server's upload. Not as the
+    # condition of an if: bash ignores set -e there, also in the subshell.
+    set +e
+    ( set -e; "publish_$kind" "$url" )
+    rc=$?
+    set -e
+    if [[ $rc -eq 0 ]]; then
+        msg2 "done: $url"
+    else
+        warn "publishing to $url failed"
+        failed+=("$url")
+    fi
 done
-msg "Uploading ${#uploads[@]} of ${#current[@]} files to $gh_repo ($tag)"
-gh release upload "$tag" -R "$gh_repo" --clobber "${uploads[@]}"
 
-# drop assets that are no longer in the repo (old package versions)
-for asset in "${published[@]}"; do
-    [[ " ${current[*]} " == *" $asset "* ]] && continue
-    msg2 "deleting old asset $asset"
-    gh release delete-asset "$tag" "$asset" -R "$gh_repo" -y
-done
-
-msg "Published: $LUNAR_REPO_URL"
+[[ ${#failed[@]} -eq 0 ]] || die "failed: ${failed[*]}"
+msg "Published to ${#targets[@]} server(s)"

@@ -120,7 +120,7 @@ whenever a kernel is installed, updated or removed.
 | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) | GUI for the ananicy-cpp rules |
 | [PipewireConfigurator](https://github.com/WhitePeace36/PipewireConfigurator) | GUI for PipeWire settings |
 | [Sysmon](https://github.com/WhitePeace36/Sysmon) | System monitor |
-| [lunar-repo](https://github.com/WhitePeace36/lunar-repo) | The `[lunar]` package repository |
+| [lunar-repo](https://github.com/WhitePeace36/lunar-repo) | The `[lunar]` package repository (mirror: [gitlab.com/WhitePeace/lunar-repo](https://gitlab.com/WhitePeace/lunar-repo)) |
 
 This repository holds the packaging (PKGBUILDs), the installer
 configuration, the ISO profile and the build scripts:

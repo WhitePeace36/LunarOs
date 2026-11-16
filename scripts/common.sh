@@ -28,6 +28,12 @@ need() {
     done
 }
 
+# Every server of [lunar], one per line: LUNAR_REPO_URL first, then
+# LUNAR_REPO_MIRRORS
+lunar_servers() {
+    printf '%s\n' "$LUNAR_REPO_URL" "${LUNAR_REPO_MIRRORS[@]}"
+}
+
 # Arch's repos with Lunar's mirrors (LUNAR_ARCH_MIRRORS) as Server lines, so
 # nothing depends on the host's mirrorlist
 arch_repos_conf() {

@@ -2,8 +2,9 @@
 # Build the Lunar live/install ISO from the archiso profile in iso/.
 #
 #   scripts/build-iso.sh          use the local repo (repo/x86_64) if it
-#                                 exists, otherwise LUNAR_REPO_URL
-#   scripts/build-iso.sh --remote always use LUNAR_REPO_URL
+#                                 exists, otherwise the published one
+#   scripts/build-iso.sh --remote always use the published repo
+#                                 (LUNAR_REPO_URL, then LUNAR_REPO_MIRRORS)
 #
 # The ISO ends up in iso/out/. The work directory (build/iso-work) is removed
 # afterwards unless --keep-work is given.
@@ -18,7 +19,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --remote) remote=1 ;;
         --keep-work) keep_work=1 ;;
-        -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) die "unknown option $1" ;;
     esac
     shift
@@ -28,11 +29,11 @@ profile_src="$LUNAR_ROOT/iso"
 [[ -f "$profile_src/profiledef.sh" ]] || die "no archiso profile in $profile_src"
 
 if [[ $remote -eq 0 && -f "$DB_FILE" ]]; then
-    server="file://$REPO_DIR"
+    servers=("file://$REPO_DIR")
     msg "Using the local repo: $REPO_DIR"
 else
-    server="$LUNAR_REPO_URL"
-    msg "Using the remote repo: $server"
+    mapfile -t servers < <(lunar_servers)
+    msg "Using the remote repo: ${servers[*]}"
 fi
 
 # pacman must trust the Lunar key to install the signed packages
@@ -52,7 +53,8 @@ mkdir -p "$profile"
 find "$profile_src" -mindepth 1 -maxdepth 1 \
     ! -name out ! -name work ! -name README.md ! -name .gitignore \
     -exec cp -a -t "$profile" {} +
-sed -i "s|@LUNAR_REPO_SERVER@|$server|" "$profile/pacman.conf"
+server_lines="$(printf 'Server = %s\\n' "${servers[@]}")"
+sed -i "s|^Server = @LUNAR_REPO_SERVER@\$|${server_lines%\\n}|" "$profile/pacman.conf"
 # Arch's repos with Lunar's mirrors and package cache instead of the host's
 # (lunar.conf: LUNAR_ARCH_MIRRORS, LUNAR_PKG_CACHE)
 sudo mkdir -p "$LUNAR_PKG_CACHE"
