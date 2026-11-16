@@ -2,7 +2,7 @@
 #
 # ananicy-cpp from Timon's fork (fork/rename/scan fixes that upstream did not
 # take). Replaces the ananicy-cpp package from the Arch repos.
-# Built from the release tag v$pkgver of github.com/WhitePeace36/ananicy-cpp.
+# Built from the release tag v$pkgver of github.com/WhitePeace36/ananicy-cpp-lunar.
 # To update: tag vX.Y.Z in the fork and push it, then set pkgver=X.Y.Z and
 # pkgrel=1. For a change to this PKGBUILD only, raise pkgrel.
 
@@ -11,7 +11,7 @@ pkgver=1.4.0
 pkgrel=1
 pkgdesc='Ananicy rewritten in C++ - Lunar build of the WhitePeace36 fork'
 arch=('x86_64')
-url='https://github.com/WhitePeace36/ananicy-cpp'
+url='https://github.com/WhitePeace36/ananicy-cpp-lunar'
 license=('GPL-3.0-or-later')
 depends=('fmt' 'spdlog' 'systemd-libs' 'libelf' 'zlib' 'libbpf')
 makedepends=('git' 'cmake' 'ninja' 'clang' 'nlohmann-json' 'bpf')

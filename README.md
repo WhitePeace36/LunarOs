@@ -33,7 +33,7 @@ change. Its own packages, and the few AUR packages it ships, come from the
 - [linux-lunar](https://github.com/WhitePeace36/linux-lunar) as the default
   kernel, Arch's `linux-lts` as fallback
 - [Elara](https://github.com/WhitePeace36/Elara), a sched_ext CPU scheduler
-  driven by the nice values that [ananicy-cpp](https://github.com/WhitePeace36/ananicy-cpp)
+  driven by the nice values that [ananicy-cpp](https://github.com/WhitePeace36/ananicy-cpp-lunar)
   sets from Lunar's [rules](https://github.com/WhitePeace36/ananicy-rules);
   [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator)
   edits the rules
@@ -113,7 +113,7 @@ whenever a kernel is installed, updated or removed.
 | [linux-lunar](https://github.com/WhitePeace36/linux-lunar) | The kernel and its patches |
 | [lunar-settings](https://github.com/WhitePeace36/lunar-settings) | sysctl, tmpfiles, kernel parameters, udev rules, boot entry tools |
 | [Elara](https://github.com/WhitePeace36/Elara) | sched_ext CPU scheduler |
-| [ananicy-cpp](https://github.com/WhitePeace36/ananicy-cpp) | ananicy-cpp fork |
+| [ananicy-cpp-lunar](https://github.com/WhitePeace36/ananicy-cpp-lunar) | ananicy-cpp fork |
 | [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) | Lunar's ananicy-cpp rules |
 | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) | GUI for the ananicy-cpp rules |
 | [PipewireConfigurator](https://github.com/WhitePeace36/PipewireConfigurator) | GUI for PipeWire settings |
