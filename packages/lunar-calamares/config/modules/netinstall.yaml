@@ -168,7 +168,7 @@
   selected: true
   packages:
     - brave-bin            # [lunar]
-    - librewolf-bin        # [lunar]
+    - librewolf
     - localsend-bin        # [lunar]
 
 - name: "Remote desktop"

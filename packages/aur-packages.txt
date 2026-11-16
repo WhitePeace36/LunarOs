@@ -14,7 +14,6 @@ lib32-nvidia-580xx-utils
 
 # --- default apps ---
 brave-bin
-librewolf-bin
 onlyoffice-bin
 localsend-bin
 appimagelauncher
