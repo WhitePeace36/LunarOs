@@ -7,7 +7,7 @@
 # pkgrel=1. For a change to this PKGBUILD only, raise pkgrel.
 
 pkgname=ananicy-cpp-lunar
-pkgver=1.3.0
+pkgver=1.4.0
 pkgrel=1
 pkgdesc='Ananicy rewritten in C++ - Lunar build of the WhitePeace36 fork'
 arch=('x86_64')

@@ -1,8 +1,13 @@
 # Maintainer: Timon <timon2201@gmail.com>
 #
 # Timon's ananicy-cpp rules for Lunar: everything under ananicy.d/ in
-# github.com/WhitePeace36/ananicy-rules goes to /etc/ananicy.d/ with the same
-# layout (ananicy.conf, 99-types.types, 99-rules/*.rules).
+# github.com/WhitePeace36/ananicy-rules goes to /usr/share/ananicy.d/ with the
+# same layout (ananicy.conf, 99-types.types, 99-rules/*.rules).
+#
+# ananicy-cpp-lunar loads /usr/share/ananicy.d first and /etc/ananicy.d after
+# it: whatever the user changes in /etc/ananicy.d (AnanicyConfigurator saves
+# changes there) replaces the packaged definition, and updates of this
+# package never touch it.
 #
 # To release a new version: tag it vX.Y.Z in the project's repo and push the
 # tag, then set pkgver here to X.Y.Z and pkgrel to 1. For a change to this
@@ -10,16 +15,18 @@
 
 pkgname=lunar-ananicy-rules
 pkgver=1.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Lunar - ananicy-cpp rules tuned for the Elara scheduler'
 arch=('any')
 url='https://github.com/WhitePeace36/ananicy-rules'
 license=('GPL-2.0-only')
+depends=('ananicy-cpp-lunar>=1.4.0') # reads /usr/share/ananicy.d
 makedepends=('git')
 provides=('ananicy-rules')
+# Other rule sets: in /usr/share they would clash with these files, in /etc/ananicy.d
+# (cachyos-ananicy-rules, older packages) they would override Lunar's rules.
 conflicts=('ananicy-rules' 'ananicy-rules-git' 'ananicy-cpp-rules' 'ananicy-rules-custom'
            'cachyos-ananicy-rules')
-backup=('etc/ananicy.d/ananicy.conf')
 source=("rules::git+${url}.git#tag=v${pkgver}")
 sha256sums=('SKIP')
 
@@ -29,7 +36,7 @@ check() {
 }
 
 package() {
-  local src=rules/ananicy.d dest="$pkgdir/etc/ananicy.d" f
+  local src=rules/ananicy.d dest="$pkgdir/usr/share/ananicy.d" f
   install -dm755 "$dest"
   while IFS= read -r -d '' f; do
     f="${f#"$src"/}"
