@@ -1,10 +1,34 @@
 #!/bin/sh
-# Applies the Breeze Dark global theme once per user at first login, so
-# everything the global theme sets (cursor, splash, window decoration,
-# Plasma style) matches the system-wide defaults in /etc/xdg.
-marker="${XDG_STATE_HOME:-$HOME/.local/state}/lunar/breeze-dark-applied"
-[ -e "$marker" ] && exit 0
-if command -v plasma-apply-lookandfeel >/dev/null 2>&1; then
-    plasma-apply-lookandfeel --apply org.kde.breezedark.desktop >/dev/null 2>&1 || exit 0
+# Once per user at first login:
+#
+#  - applies the Breeze Dark global theme, so everything the global theme
+#    sets (cursor, window decoration, Plasma style) matches the system-wide
+#    defaults in /etc/xdg
+#  - turns the splash screen after login off. Lunar's default is no splash
+#    (/etc/xdg/ksplashrc), but applying a global theme writes the theme's
+#    splash into ~/.config/ksplashrc, which wins over /etc/xdg. A splash the
+#    user picked (System Settings > Splash Screen) is kept.
+
+state="${XDG_STATE_HOME:-$HOME/.local/state}/lunar"
+
+marker="$state/breeze-dark-applied"
+if [ ! -e "$marker" ]; then
+    applied=yes
+    if command -v plasma-apply-lookandfeel >/dev/null 2>&1; then
+        plasma-apply-lookandfeel --apply org.kde.breezedark.desktop >/dev/null 2>&1 || applied=no
+    fi
+    # try again at the next login if it failed
+    [ "$applied" = yes ] && mkdir -p "$state" && touch "$marker"
 fi
-mkdir -p "${marker%/*}" && touch "$marker"
+
+marker="$state/no-splash-1"
+if [ ! -e "$marker" ] && [ -e "$state/breeze-dark-applied" ]; then
+    theme="$(kreadconfig6 --file ksplashrc --group KSplash --key Theme 2>/dev/null)"
+    case "$theme" in
+        ''|None|org.kde.breeze.desktop|org.kde.breezedark.desktop|org.kde.breezetwilight.desktop)
+            kwriteconfig6 --file ksplashrc --group KSplash --key Engine none
+            kwriteconfig6 --file ksplashrc --group KSplash --key Theme None
+            ;;
+    esac
+    touch "$marker"
+fi

@@ -1,0 +1,18 @@
+# Lunar: screen timeouts (System Settings > Power Management), on mains
+# power and on battery: dim after 5 minutes, screen off after 7 minutes, or
+# after 5 minutes when the screen is locked. The low battery profile keeps
+# Plasma's shorter defaults. Changes in System Settings go into
+# ~/.config/powerdevilrc and win over these.
+[AC][Display]
+DimDisplayWhenIdle=true
+DimDisplayIdleTimeoutSec=300
+TurnOffDisplayWhenIdle=true
+TurnOffDisplayIdleTimeoutSec=420
+TurnOffDisplayIdleTimeoutWhenLockedSec=300
+
+[Battery][Display]
+DimDisplayWhenIdle=true
+DimDisplayIdleTimeoutSec=300
+TurnOffDisplayWhenIdle=true
+TurnOffDisplayIdleTimeoutSec=420
+TurnOffDisplayIdleTimeoutWhenLockedSec=300

@@ -1,13 +1,31 @@
 #!/bin/sh
-# Puts Ananicy Configurator and Pipewire Configurator on the desktop, once
-# per user at first login. The icons are links to the applications' own
-# launchers in /usr/share/applications, so Plasma starts them without asking
-# whether to trust them, and they follow updates of the applications.
-# Applications that aren't installed (the live ISO) are left out. Icons the
-# user deletes afterwards don't come back.
+# Puts Ananicy Configurator, Pipewire Configurator and ProtonUp-Qt on the
+# desktop, at login. The icons are links to the applications' own launchers
+# in /usr/share/applications, so Plasma starts them without asking whether
+# to trust them, and they follow updates of the applications.
+#
+# Each icon is put there once per user: an icon the user deletes doesn't
+# come back. An application that isn't installed (the live ISO, or
+# ProtonUp-Qt unticked in the installer) gets its icon at the first login
+# after it is installed.
 
-marker="${XDG_STATE_HOME:-$HOME/.local/state}/lunar/desktop-icons-1"
-[ -e "$marker" ] && exit 0
+apps="ananicy-gui.desktop pipewire-configurator.desktop net.davidotek.pupgui2.desktop"
+
+state="${XDG_STATE_HOME:-$HOME/.local/state}/lunar"
+done_list="$state/desktop-icons"
+# accounts from before this list: the first version put the two
+# configurators there and only kept a marker
+if [ ! -e "$done_list" ] && [ -e "$state/desktop-icons-1" ]; then
+    mkdir -p "$state" && printf '%s\n' ananicy-gui.desktop pipewire-configurator.desktop > "$done_list"
+fi
+
+todo=""
+for app in $apps; do
+    grep -qx "$app" "$done_list" 2>/dev/null && continue
+    [ -f "/usr/share/applications/$app" ] || continue
+    todo="$todo $app"
+done
+[ -n "$todo" ] || exit 0
 
 # make sure the folder exists under its (translated) name
 command -v xdg-user-dirs-update >/dev/null 2>&1 && xdg-user-dirs-update >/dev/null 2>&1
@@ -15,14 +33,13 @@ desktop=""
 command -v xdg-user-dir >/dev/null 2>&1 && desktop="$(xdg-user-dir DESKTOP 2>/dev/null)"
 [ -n "$desktop" ] || desktop="$HOME/Desktop"
 desktop="${desktop%/}"
-
 # xdg-user-dir answers with the home folder when there is no desktop folder
-if [ "$desktop" != "${HOME%/}" ] && mkdir -p "$desktop" 2>/dev/null; then
-    for app in ananicy-gui.desktop pipewire-configurator.desktop; do
-        [ -f "/usr/share/applications/$app" ] || continue
-        [ -e "$desktop/$app" ] || [ -L "$desktop/$app" ] && continue
-        ln -s "/usr/share/applications/$app" "$desktop/$app"
-    done
-fi
+[ "$desktop" != "${HOME%/}" ] && mkdir -p "$desktop" 2>/dev/null || exit 0
 
-mkdir -p "${marker%/*}" && touch "$marker"
+mkdir -p "$state"
+for app in $todo; do
+    if [ ! -e "$desktop/$app" ] && [ ! -L "$desktop/$app" ]; then
+        ln -s "/usr/share/applications/$app" "$desktop/$app"
+    fi
+    echo "$app" >> "$done_list"
+done

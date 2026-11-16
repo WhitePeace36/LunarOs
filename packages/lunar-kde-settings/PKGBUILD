@@ -1,9 +1,9 @@
 # Maintainer: Timon <timon2201@gmail.com>
 
 pkgname=lunar-kde-settings
-pkgver=1.3.0
+pkgver=1.4.0
 pkgrel=1
-pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar wallpapers, non-floating panel, Lunar logo on the application launcher, Dolphin view, desktop icons)'
+pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar wallpapers also on the lock and login screen, no splash screen, screen timeouts, system tray entries, non-floating panel, Lunar logo on the application launcher, Dolphin view, desktop icons)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')

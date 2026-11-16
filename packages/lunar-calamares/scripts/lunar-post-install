@@ -8,7 +8,8 @@
 #  2. firewall: ufw on, incoming blocked except LocalSend
 #  3. Flathub + Flatseal
 #  4. zsh with Lunar's .zshrc for root and the user
-#  5. /etc/resolv.conf -> systemd-resolved (last, the chroot needs DNS until then)
+#  5. login lockout: 10 wrong passwords in a row instead of 3
+#  6. /etc/resolv.conf -> systemd-resolved (last, the chroot needs DNS until then)
 
 set -uo pipefail
 user="${1:-}"
@@ -89,7 +90,25 @@ setup_shells() {
     fi
 }
 
-# --- 5. DNS -----------------------------------------------------------------
+# --- 5. login lockout ------------------------------------------------------
+# pam_faillock locks an account for 10 minutes after "deny" wrong passwords
+# in a row (Arch's default: 3). The file belongs to the pam package and is
+# one of its protected config files: pam updates keep this change and save
+# their own version as faillock.conf.pacnew.
+setup_faillock() {
+    local conf=/etc/security/faillock.conf
+    [[ -f "$conf" ]] || { log "$conf missing, skipped"; return 0; }
+    if grep -Eq '^[#[:space:]]*deny[[:space:]]*=' "$conf"; then
+        # the first "deny =" line (Arch's is "# deny = 3"); further ones go
+        sed -i -E '0,/^[#[:space:]]*deny[[:space:]]*=.*/s//deny = 10/' "$conf"
+        sed -i -E '/^deny = 10$/,$ { /^deny = 10$/!{ /^[[:space:]]*deny[[:space:]]*=/d } }' "$conf"
+    else
+        printf '\ndeny = 10\n' >> "$conf"
+    fi
+    log "faillock: deny = 10"
+}
+
+# --- 6. DNS -----------------------------------------------------------------
 setup_resolv() {
     ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 }
@@ -99,5 +118,6 @@ setup_boot || rc=1
 setup_ufw
 setup_flatpak
 setup_shells
+setup_faillock
 setup_resolv
 exit "$rc"

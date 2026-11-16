@@ -1,0 +1,5 @@
+# Lunar: no splash screen after login. Users can pick one in System
+# Settings > Splash Screen (saved in ~/.config/ksplashrc).
+[KSplash]
+Engine=none
+Theme=None

@@ -12,7 +12,7 @@ over packages with the same name in Arch's repositories.
 | `linux-lunar` | Default kernel, built from [linux-lunar](https://github.com/WhitePeace36/linux-lunar) |
 | `lunar-settings` | System settings, built from [lunar-settings](https://github.com/WhitePeace36/lunar-settings): sysctl, THP/tmpfiles, kernel parameters, zram, I/O schedulers, SATA/HDD rules, AMD GPU power limit and VRAM clock, limits, mDNS, `lunar-update-cmdline`, `lunar-sdboot-update`, `lunar-gpu-setup` |
 | `lunar-hooks` | pacman hooks: Lunar branding in `/etc/os-release`, "reboot required" notice after kernel/systemd updates |
-| `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login); the Lunar logo instead of the KDE logo on the application launcher (a Plasma update script, run once per user, that leaves an icon the user picked alone); panels that don't float (update script, once per user); the Lunar wallpaper 20 on the desktop (update script, once per user, only where Plasma's default wallpaper is set) and 26 on the lock screen (`/etc/xdg/kscreenlockerrc`); Ananicy Configurator and Pipewire Configurator on the desktop (links made once per user at first login) |
+| `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login); the Lunar logo instead of the KDE logo on the application launcher (a Plasma update script, run once per user, that leaves an icon the user picked alone); panels that don't float (update script, once per user); the Lunar wallpaper 20 on the desktop (update script, once per user, only where Plasma's default wallpaper is set) and 26 on the lock screen (`/etc/xdg/kscreenlockerrc`) and the login screen (`/usr/lib/plasmalogin/plasmalogin.conf.d/50-lunar.conf`); no splash screen after login (`/etc/xdg/ksplashrc`, and once per user after Breeze Dark is applied, which sets its own); screen dims after 5 minutes, turns off after 7, after 5 when locked (`/etc/xdg/powerdevilrc`); system tray: Weather Report and Keyboard Layout disabled, Clipboard always shown, Notifications only in the tray's popup (update script, once per user); Ananicy Configurator, Pipewire Configurator and ProtonUp-Qt on the desktop (links made at login, once per application and user, as soon as the application is installed) |
 | `lunar-wallpapers` | The wallpapers in `branding/` as Plasma wallpaper packages in `/usr/share/wallpapers/lunar-*` (`prepare.sh` copies them into the build folder) |
 | `lunar-zsh-config` | zsh prompt, completion menu, `lsd`/`bat` aliases |
 | `ananicy-cpp-lunar` | Build of the [ananicy-cpp fork](https://github.com/WhitePeace36/ananicy-cpp-lunar) (replaces Arch's `ananicy-cpp`) |
@@ -109,7 +109,9 @@ summary.
 The installer is UEFI only and always installs systemd-boot. It installs
 `linux-lunar` (default entry) and `linux-lts`, ranks Arch mirrors with
 reflector, uses zsh for new users, masks rtkit, enables ufw (incoming blocked
-except LocalSend, 53317 tcp/udp), and installs Flatseal from Flathub.
+except LocalSend, 53317 tcp/udp), sets `deny = 10` in
+`/etc/security/faillock.conf` (lockout after 10 wrong passwords instead of 3),
+and installs Flatseal from Flathub.
 Filesystems: Btrfs (default, with subvolumes), ext4, XFS, F2FS; optional LUKS2
 encryption. There is no swap partition or swap file: Lunar swaps to zram only.
 The initramfs uses mkinitcpio's systemd-based hooks (`systemd`, `sd-vconsole`,

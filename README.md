@@ -19,8 +19,12 @@ change. Its own packages, and the few AUR packages it ships, come from the
 **Desktop**
 - KDE Plasma on Wayland, Plasma Login Manager, Breeze Dark throughout
   (Plasma and GTK apps), the Lunar logo on the application launcher,
-  Lunar wallpapers on the desktop and the lock screen, a panel that doesn't
-  float, Pipewire Configurator and Ananicy Configurator on the desktop
+  Lunar wallpapers on the desktop, the lock screen and the login screen, no
+  splash screen after login, a panel that doesn't float, Pipewire
+  Configurator, Ananicy Configurator and ProtonUp-Qt on the desktop; the
+  screen dims after 5 minutes and turns off after 7 (5 when locked); in the
+  system tray the clipboard is always shown, weather and keyboard layout are
+  off, and notifications sit in the tray's popup
 - PipeWire for sound, with [Pipewire Configurator](https://github.com/WhitePeace36/PipewireConfigurator)
   and EasyEffects
 - [Sysmon](https://github.com/WhitePeace36/Sysmon) as the system monitor
@@ -66,6 +70,8 @@ change. Its own packages, and the few AUR packages it ships, come from the
 - Swap in compressed RAM (zram) only, no swap partition or file, so no
   hibernation
 - Firewall (ufw) on: incoming connections are blocked, except for LocalSend
+- An account is locked for 10 minutes after 10 wrong passwords in a row
+  (Arch: 3)
 - rtkit is masked, so Elara and ananicy-cpp control the priority of audio
   and desktop threads
 
