@@ -1,0 +1,42 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# Lunar boot splash (Plymouth theme "lunar"): the middle of the default
+# wallpaper (branding/20-wordmark-lockup.png: moon, "Lunar", glow and rings),
+# faded into the wallpaper's night blue, which fills the rest of the screen,
+# with the spinner below. Plymouth draws images 1:1 and can't scale a full
+# screen picture, so this looks the same on every screen size.
+#
+# watermark.png is made from the wallpaper by make-splash.py (needs
+# python-pillow); after changing the wallpaper, run it again and raise pkgrel:
+#
+#   python3 make-splash.py      # prints the background colour, which
+#                               # lunar.plymouth must use as well
+#
+# The spinner and password dialog images are copies of the spinner theme's
+# (about 370 KB), taken from the plymouth package at build time. They can't be
+# links: mkinitcpio puts the links into the initramfs without their targets,
+# so the boot splash would have no spinner and no password dialog.
+
+pkgname=lunar-plymouth-theme
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Lunar - boot splash: the Lunar wallpaper with a spinner'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+depends=('plymouth')
+makedepends=('plymouth') # the spinner images
+install=lunar-plymouth-theme.install
+source=('lunar.plymouth' 'watermark.png')
+sha256sums=('SKIP' 'SKIP')
+
+package() {
+  local dir="$pkgdir/usr/share/plymouth/themes/lunar" spinner=/usr/share/plymouth/themes/spinner f
+  install -Dm644 lunar.plymouth "$dir/lunar.plymouth"
+  install -Dm644 watermark.png "$dir/watermark.png"
+  for f in "$spinner"/*.png; do
+    [[ ${f##*/} == watermark.png ]] && continue
+    install -m644 "$f" "$dir/${f##*/}"
+  done
+  [[ -f "$dir/animation-0001.png" ]] || { echo "no spinner images in $spinner" >&2; return 1; }
+}

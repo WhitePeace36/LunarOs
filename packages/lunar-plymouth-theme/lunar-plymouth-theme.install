@@ -1,0 +1,36 @@
+# The boot splash is part of the initramfs, so changing the theme only shows
+# after the initramfs is rebuilt. During a new installation there is none yet
+# (the installer sets the theme and builds it), so it is only rebuilt when
+# images are already in /boot.
+
+_rebuild() {
+    if compgen -G 'boot/initramfs-*.img' >/dev/null; then
+        echo "==> Rebuilding the initramfs for the boot splash..."
+        mkinitcpio -P >/dev/null 2>&1 || echo "==> mkinitcpio -P failed; run it by hand"
+    fi
+}
+
+post_install() {
+    # bgrt is Lunar's earlier default and the plymouth package's own
+    case "$(plymouth-set-default-theme 2>/dev/null)" in
+        bgrt|spinner|'')
+            plymouth-set-default-theme lunar
+            _rebuild
+            ;;
+    esac
+}
+
+post_upgrade() {
+    [[ "$(plymouth-set-default-theme 2>/dev/null)" == lunar ]] && _rebuild
+    return 0
+}
+
+pre_remove() {
+    if [[ "$(plymouth-set-default-theme 2>/dev/null)" == lunar ]]; then
+        plymouth-set-default-theme bgrt
+    fi
+}
+
+post_remove() {
+    _rebuild
+}

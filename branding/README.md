@@ -24,6 +24,7 @@ its PKGBUILD.
 |---|---|---|
 | Desktop wallpaper | `20-wordmark-lockup.png` | `packages/lunar-kde-settings/files/usr/share/plasma/shells/org.kde.plasma.desktop/contents/updates/lunar_wallpaper.js` |
 | Lock screen | `26-busy-moonlit-lake.png` | `packages/lunar-kde-settings/files/etc/xdg/kscreenlockerrc` |
+| Boot splash (Plymouth) | `20-wordmark-lockup.png`, its middle | `packages/lunar-plymouth-theme/watermark.png`, made by `make-splash.py` there |
 
 ## Colors
 

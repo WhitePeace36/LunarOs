@@ -6,6 +6,7 @@
 lunar-keyring
 lunar-mirrorlist
 lunar-hooks
+lunar-plymouth-theme
 linux-lunar
 ananicy-cpp-lunar
 lunar-ananicy-rules
