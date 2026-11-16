@@ -12,6 +12,19 @@ used in:
 
 After changing the master, regenerate these.
 
+## Wallpapers
+
+The `NN-name.png` files are Lunar's wallpapers. The package
+`lunar-wallpapers` (`packages/lunar-wallpapers`) installs each one as the
+Plasma wallpaper `/usr/share/wallpapers/lunar-<name>` (without the number and
+without `busy-` or `lunar-`). After adding or changing one, raise `pkgrel` in
+its PKGBUILD.
+
+| Used as | File | Set in |
+|---|---|---|
+| Desktop wallpaper | `20-wordmark-lockup.png` | `packages/lunar-kde-settings/files/usr/share/plasma/shells/org.kde.plasma.desktop/contents/updates/lunar_wallpaper.js` |
+| Lock screen | `26-busy-moonlit-lake.png` | `packages/lunar-kde-settings/files/etc/xdg/kscreenlockerrc` |
+
 ## Colors
 
 | Name | Hex |

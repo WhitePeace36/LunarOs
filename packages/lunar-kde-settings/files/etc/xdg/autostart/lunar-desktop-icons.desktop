@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Lunar: desktop icons
+Exec=/usr/lib/lunar/desktop-icons
+OnlyShowIn=KDE;
+NoDisplay=true
+X-KDE-autostart-phase=1

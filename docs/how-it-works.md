@@ -12,7 +12,8 @@ over packages with the same name in Arch's repositories.
 | `linux-lunar` | Default kernel, built from [linux-lunar](https://github.com/WhitePeace36/linux-lunar) |
 | `lunar-settings` | System settings, built from [lunar-settings](https://github.com/WhitePeace36/lunar-settings): sysctl, THP/tmpfiles, kernel parameters, zram, I/O schedulers, SATA/HDD rules, AMD GPU power limit and VRAM clock, limits, mDNS, `lunar-update-cmdline`, `lunar-sdboot-update`, `lunar-gpu-setup` |
 | `lunar-hooks` | pacman hooks: Lunar branding in `/etc/os-release`, "reboot required" notice after kernel/systemd updates |
-| `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login); the Lunar logo instead of the KDE logo on the application launcher (a Plasma update script, run once per user, that leaves an icon the user picked alone) |
+| `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login); the Lunar logo instead of the KDE logo on the application launcher (a Plasma update script, run once per user, that leaves an icon the user picked alone); panels that don't float (update script, once per user); the Lunar wallpaper 20 on the desktop (update script, once per user, only where Plasma's default wallpaper is set) and 26 on the lock screen (`/etc/xdg/kscreenlockerrc`); Ananicy Configurator and Pipewire Configurator on the desktop (links made once per user at first login) |
+| `lunar-wallpapers` | The wallpapers in `branding/` as Plasma wallpaper packages in `/usr/share/wallpapers/lunar-*` (`prepare.sh` copies them into the build folder) |
 | `lunar-zsh-config` | zsh prompt, completion menu, `lsd`/`bat` aliases |
 | `ananicy-cpp-lunar` | Build of the [ananicy-cpp fork](https://github.com/WhitePeace36/ananicy-cpp-lunar) (replaces Arch's `ananicy-cpp`) |
 | `lunar-ananicy-rules` | ananicy-cpp rules from [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) |

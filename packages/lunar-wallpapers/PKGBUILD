@@ -1,0 +1,50 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# Lunar's wallpapers, from branding/ (packages/lunar-wallpapers/prepare.sh
+# copies them next to this PKGBUILD as wallpapers/NN-name.png).
+#
+# Each one becomes a Plasma wallpaper package
+# /usr/share/wallpapers/lunar-<name>, where <name> is the file name without
+# the number and without "busy-" or "lunar-" (20-wordmark-lockup.png ->
+# lunar-wordmark-lockup). lunar-kde-settings uses lunar-wordmark-lockup (20)
+# as the desktop wallpaper and lunar-moonlit-lake (26) on the lock screen.
+
+pkgname=lunar-wallpapers
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Lunar - wallpapers'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+
+# width x height from the PNG header
+_size() {
+  local b
+  read -ra b < <(od -An -tu1 -j16 -N8 "$1")
+  echo "$(( b[0]<<24 | b[1]<<16 | b[2]<<8 | b[3] ))x$(( b[4]<<24 | b[5]<<16 | b[6]<<8 | b[7] ))"
+}
+
+package() {
+  local png name title dir
+  for png in "$startdir"/wallpapers/*.png; do
+    name="$(basename "$png" .png)"
+    name="${name#[0-9][0-9]-}"
+    name="${name#busy-}"
+    name="${name#lunar-}"
+    title="Lunar $(sed -E 's/(^|-)([a-z])/\1\u\2/g; s/-/ /g' <<<"$name")"
+    dir="$pkgdir/usr/share/wallpapers/lunar-$name"
+
+    install -Dm644 "$png" "$dir/contents/images/$(_size "$png").png"
+    cat > "$dir/metadata.json" <<JSON
+{
+    "KPlugin": {
+        "Authors": [ { "Name": "Timon" } ],
+        "Id": "lunar-$name",
+        "License": "GPL-2.0-only",
+        "Name": "$title"
+    }
+}
+JSON
+    chmod 644 "$dir/metadata.json"
+  done
+}

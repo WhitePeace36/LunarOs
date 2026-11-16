@@ -19,7 +19,7 @@ names.
 | `packages/build-order.txt` | Order `build-packages.sh` builds in |
 | `packages/aur-packages.txt` | AUR packages built into `[lunar]` |
 | `iso/` | Live/install ISO profile (archiso) |
-| `branding/` | Logo |
+| `branding/` | Logo and wallpapers |
 | `scripts/` | Build, sign and publish scripts |
 | `docs/` | This documentation |
 

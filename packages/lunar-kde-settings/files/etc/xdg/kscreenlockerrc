@@ -1,0 +1,10 @@
+# Lunar: the Lunar wallpaper "Moonlit Lake" (branding/26-busy-moonlit-lake.png,
+# package lunar-wallpapers) on the lock screen. A wallpaper the user picks
+# (System Settings > Screen Locking) goes into ~/.config/kscreenlockerrc and
+# wins over this one.
+[Greeter]
+WallpaperPlugin=org.kde.image
+
+[Greeter][Wallpaper][org.kde.image][General]
+Image=file:///usr/share/wallpapers/lunar-moonlit-lake/
+PreviewImage=file:///usr/share/wallpapers/lunar-moonlit-lake/

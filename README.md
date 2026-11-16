@@ -18,7 +18,9 @@ change. Its own packages, and the few AUR packages it ships, come from the
 
 **Desktop**
 - KDE Plasma on Wayland, Plasma Login Manager, Breeze Dark throughout
-  (Plasma and GTK apps), the Lunar logo on the application launcher
+  (Plasma and GTK apps), the Lunar logo on the application launcher,
+  Lunar wallpapers on the desktop and the lock screen, a panel that doesn't
+  float, Pipewire Configurator and Ananicy Configurator on the desktop
 - PipeWire for sound, with [Pipewire Configurator](https://github.com/WhitePeace36/PipewireConfigurator)
   and EasyEffects
 - [Sysmon](https://github.com/WhitePeace36/Sysmon) as the system monitor

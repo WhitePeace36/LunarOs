@@ -1,0 +1,28 @@
+#!/bin/sh
+# Puts Ananicy Configurator and Pipewire Configurator on the desktop, once
+# per user at first login. The icons are links to the applications' own
+# launchers in /usr/share/applications, so Plasma starts them without asking
+# whether to trust them, and they follow updates of the applications.
+# Applications that aren't installed (the live ISO) are left out. Icons the
+# user deletes afterwards don't come back.
+
+marker="${XDG_STATE_HOME:-$HOME/.local/state}/lunar/desktop-icons-1"
+[ -e "$marker" ] && exit 0
+
+# make sure the folder exists under its (translated) name
+command -v xdg-user-dirs-update >/dev/null 2>&1 && xdg-user-dirs-update >/dev/null 2>&1
+desktop=""
+command -v xdg-user-dir >/dev/null 2>&1 && desktop="$(xdg-user-dir DESKTOP 2>/dev/null)"
+[ -n "$desktop" ] || desktop="$HOME/Desktop"
+desktop="${desktop%/}"
+
+# xdg-user-dir answers with the home folder when there is no desktop folder
+if [ "$desktop" != "${HOME%/}" ] && mkdir -p "$desktop" 2>/dev/null; then
+    for app in ananicy-gui.desktop pipewire-configurator.desktop; do
+        [ -f "/usr/share/applications/$app" ] || continue
+        [ -e "$desktop/$app" ] || [ -L "$desktop/$app" ] && continue
+        ln -s "/usr/share/applications/$app" "$desktop/$app"
+    done
+fi
+
+mkdir -p "${marker%/*}" && touch "$marker"

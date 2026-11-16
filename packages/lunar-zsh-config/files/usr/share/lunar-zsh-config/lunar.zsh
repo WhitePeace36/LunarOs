@@ -85,8 +85,6 @@ alias la='lsd -A'
 alias lt='lsd --tree --depth 2'
 alias cat='bat --paging=never --style=plain'
 alias df='duf'
-alias top='btop'
-alias htop='btop'
 alias find-text='rg'
 
 # safer defaults and colours
