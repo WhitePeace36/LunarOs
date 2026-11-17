@@ -16,6 +16,8 @@ packages/*/elara/
 packages/*/psc/
 packages/*/calamares/
 packages/*/rules/
+packages/pipewire-configurator/pwc/
+
 
 # never commit a secret key
 *.asc
