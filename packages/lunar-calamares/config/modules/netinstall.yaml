@@ -126,6 +126,7 @@
     - fzf
     - zoxide
     - fastfetch
+    - htop
     - pkgfile
     - pacman-contrib
     - bash-completion
