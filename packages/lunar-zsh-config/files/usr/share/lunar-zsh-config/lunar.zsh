@@ -1,5 +1,6 @@
 # Lunar zsh configuration - sourced from ~/.zshrc
-# Prompt:   user@host:path(branch⚡) »
+# Prompt:   user@host:path(branch○) »   (the colours of oh-my-zsh's dpoggi
+#           theme, with the user name in Lunar blue)
 # Overrides go into ~/.zshrc after the "source" line.
 
 # ---------------------------------------------------------------- history
@@ -46,17 +47,20 @@ bindkey -M menuselect '^[[Z' reverse-menu-complete
 autoload -Uz vcs_info
 zstyle ':vcs_info:*' enable git
 zstyle ':vcs_info:git:*' check-for-changes true
-zstyle ':vcs_info:git:*' unstagedstr '⚡'
-zstyle ':vcs_info:git:*' stagedstr '⚡'
-zstyle ':vcs_info:git:*' formats       '%F{208}(%b%u%c)%f'
-zstyle ':vcs_info:git:*' actionformats '%F{208}(%b|%a%u%c)%f'
+zstyle ':vcs_info:git:*' unstagedstr 'u'
+zstyle ':vcs_info:git:*' stagedstr 's'
+# (branch○) clean, (branch⚡) changes; %m is set by the hook below
+zstyle ':vcs_info:git:*' formats       '%F{yellow}(%b%m%F{yellow})%f'
+zstyle ':vcs_info:git:*' actionformats '%F{yellow}(%b|%a%m%F{yellow})%f'
 
-# ⚡ also for untracked files
-zstyle ':vcs_info:git*+set-message:*' hooks lunar-untracked
-+vi-lunar-untracked() {
-    if [[ -z "${hook_com[unstaged]}${hook_com[staged]}" ]] \
-        && [[ -n "$(git ls-files --others --exclude-standard --directory --no-empty-directory 2>/dev/null | head -n1)" ]]; then
-        hook_com[unstaged]='⚡'
+# green ○ for a clean work tree, red ⚡ for staged, unstaged or untracked changes
+zstyle ':vcs_info:git*+set-message:*' hooks lunar-state
++vi-lunar-state() {
+    if [[ -n "${hook_com[unstaged]}${hook_com[staged]}" ]] \
+        || [[ -n "$(git ls-files --others --exclude-standard --directory --no-empty-directory 2>/dev/null | head -n1)" ]]; then
+        hook_com[misc]='%F{red}⚡'
+    else
+        hook_com[misc]='%F{green}○'
     fi
 }
 
@@ -64,8 +68,17 @@ autoload -Uz add-zsh-hook
 _lunar_precmd() { vcs_info }
 add-zsh-hook precmd _lunar_precmd
 
-PROMPT='%B%F{green}%n@%m%f%b:%F{magenta}%~%f${vcs_info_msg_0_} %F{red}»%f '
-RPROMPT='%(?..%F{red}%?%f)'
+# User name in Lunar blue (#2f80ed, the blue of the logo) where the terminal
+# has true colour, else the nearest of the 256 colours. root: red name and "#".
+if [[ "$COLORTERM" == (truecolor|24bit) ]]; then
+    _lunar_blue='#2f80ed'
+else
+    _lunar_blue='33'
+fi
+PROMPT='%(!.%F{red}.%F{'"$_lunar_blue"'})%n%f@%F{cyan}%m%f:%F{magenta}%~${vcs_info_msg_0_} %F{red}%(!.#.»)%f '
+unset _lunar_blue
+PROMPT2='%F{red}\ %f'
+RPROMPT='%(?..%F{red}%? ↵%f)'
 
 # ---------------------------------------------------------------- key bindings
 bindkey -e
