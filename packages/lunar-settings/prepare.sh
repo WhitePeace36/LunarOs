@@ -10,7 +10,7 @@
 set -euo pipefail
 
 _repo="https://github.com/WhitePeace36/lunar-settings.git"
-_tag="v2.0.7"
+_tag="v2.0.8"
 
 work="${1:?usage: prepare.sh <work-dir>}"
 src="$work/lunar-settings"

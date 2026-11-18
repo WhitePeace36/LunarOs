@@ -45,7 +45,8 @@ fi
 log "package linux-$(sed -n 's/^_pkgsuffix="\(.*\)"$/\1/p' "$src/customization.cfg" | tail -n1)"
 
 # Signed kernel.org tarballs: makepkg checks them against the builder's keyring.
-if grep -q '^_pgp_verify="true"' "$here/lunar-distro.cfg"; then
+# (the last _pgp_verify in customization.cfg wins, as in lunar.sh)
+if [[ "$(sed -n 's/^_pgp_verify="\(.*\)"$/\1/p' "$src/customization.cfg" | tail -n1)" == true ]]; then
     gpg --batch --locate-keys torvalds@kernel.org gregkh@kernel.org >/dev/null 2>&1 \
         || log "WARNING: could not fetch the kernel.org signing keys"
 fi

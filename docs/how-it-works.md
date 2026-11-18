@@ -47,10 +47,11 @@ linux-lunar's, which only sets the package suffix, compiler, LTO and `-march`.
 The kernel releases differ (`7.x.y-N-lunar`, `7.x.y-N-lunar-v3`), so both
 packages can be installed at the same time.
 
-`lunar-distro.cfg` differs from a personal linux-lunar build in `_march`
-(`generic` / `x86-64-v3` instead of `native`: a package must run on more
-than the build machine) and in building non-interactively without user
-patches. Everything else keeps linux-lunar's
+`lunar-distro.cfg` only lists what Lunar changes from linux-lunar's
+defaults: the version, the compiler, LTO and `_march` (`generic` /
+`x86-64-v3` instead of `native`: a package must run on more than the build
+machine), and building non-interactively without user patches. Everything
+else keeps linux-lunar's
 defaults: 1000 Hz, full preemption, periodic tick, the performance governor,
 THP `always`. `lunar-settings` sets the memory values linux-lunar compiles in
 (`vm.defrag_mode=1`, boost 600, proactiveness 50, THP, ...) once more as
@@ -107,9 +108,11 @@ Both tools only act on systems installed by Lunar's installer (where
 mkinitcpio keeps in `/boot` (`vmlinuz-<kernel>`, `initramfs-<kernel>.img`).
 It removes entries of removed kernels and makes `linux-lunar-v3` the default,
 or `linux-lunar` if `-v3` isn't installed, unless another default was set by
-hand in `loader.conf`. A default it chose itself is marked with a comment in
-`loader.conf`, so installing `linux-lunar-v3` later (`pacman -S
-linux-lunar-v3 linux-lunar-v3-headers`) makes it the new default.
+hand in `loader.conf` (an entry name or a glob such as `lunar-linux-lts*`)
+or with the boot menu's `d` key. It records the default it chose itself in
+`/var/lib/lunar/sdboot-default`; only that one moves, so installing
+`linux-lunar-v3` later (`pacman -S linux-lunar-v3 linux-lunar-v3-headers`)
+makes it the new default, and a default changed by hand is never reset.
 
 A pacman hook runs `lunar-update-cmdline` (and with it `lunar-sdboot-update`)
 after every kernel install, update or removal, and when Lunar's parameter
