@@ -5,7 +5,10 @@ from Arch's `releng` profile (archiso v92) and changed for Lunar:
 
 - **UEFI only** (`bootmodes=('uefi.systemd-boot')`): the installer always
   sets up systemd-boot. `lunar-install` refuses to start on a BIOS boot.
-- Boot menu: linux-lunar (default), linux-lts (fallback), Memtest86+.
+- Boot menu: linux-lunar (default; the generic GCC build, so the live system
+  starts on every x86-64 CPU), linux-lts (fallback), Memtest86+. The
+  installer puts linux-lunar-v3 on the installed system when the CPU has
+  x86-64-v3.
   One archiso initramfs per kernel (`airootfs/etc/mkinitcpio.d/*.preset`).
 - KDE Plasma live session: `lunar-live-user.service` creates `liveuser`
   (no password, sudo/polkit without password), Plasma Login Manager logs it

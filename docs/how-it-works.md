@@ -9,7 +9,8 @@ over packages with the same name in Arch's repositories.
 
 | Package | Purpose |
 |---|---|
-| `linux-lunar` | Default kernel, built from [linux-lunar](https://github.com/WhitePeace36/linux-lunar) |
+| `linux-lunar-v3` | Default kernel on CPUs with x86-64-v3, built from [linux-lunar](https://github.com/WhitePeace36/linux-lunar) with Clang, ThinLTO and `-march=x86-64-v3` |
+| `linux-lunar` | The same kernel built with GCC, without LTO, for generic x86-64: default kernel on older CPUs, and the live ISO's kernel |
 | `lunar-settings` | System settings, built from [lunar-settings](https://github.com/WhitePeace36/lunar-settings): sysctl, THP/tmpfiles, kernel parameters, zram, I/O schedulers, SATA/HDD rules, AMD GPU power limit and VRAM clock, limits, mDNS, `lunar-update-cmdline`, `lunar-sdboot-update`, `lunar-gpu-setup` |
 | `lunar-hooks` | pacman hooks: Lunar branding in `/etc/os-release`, "reboot required" notice after kernel/systemd updates |
 | `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login); the Lunar logo instead of the KDE logo on the application launcher (a Plasma update script, run once per user, that leaves an icon the user picked alone); panels that don't float (update script, once per user); the Lunar wallpaper 20 on the desktop (update script, once per user, only where Plasma's default wallpaper is set) and 26 on the lock screen (`/etc/xdg/kscreenlockerrc`) and the login screen (`/usr/lib/plasmalogin/plasmalogin.conf.d/50-lunar.conf`); no splash screen after login (`/etc/xdg/ksplashrc`, and once per user after Breeze Dark is applied, which sets its own); screen dims after 5 minutes, turns off after 7, after 5 when locked (`/etc/xdg/powerdevilrc`); system tray: Weather Report and Keyboard Layout disabled, Clipboard always shown, Notifications only in the tray's popup (update script, once per user); Ananicy Configurator, Pipewire Configurator and ProtonUp-Qt on the desktop (links made at login, once per application and user, as soon as the application is installed) |
@@ -33,9 +34,23 @@ linux-lunar at a pinned commit, appends `lunar-distro.cfg` to its
 `customization.cfg` and runs `./lunar.sh --config-only`; the resulting folder
 is then built in the clean chroot like every other package.
 
-`lunar-distro.cfg` differs from a personal linux-lunar build in
-`_march=generic` (one package must boot every x86-64 CPU) and in building
-non-interactively without user patches. Everything else keeps linux-lunar's
+Lunar builds that kernel twice, from the same commit and `_version`:
+
+| Package | Compiler | LTO | `-march` | Runs on |
+|---|---|---|---|---|
+| `linux-lunar-v3` | Clang | ThinLTO | `x86-64-v3` | CPUs with AVX2, BMI2, FMA, MOVBE (Intel Haswell, AMD Zen 1 and newer) |
+| `linux-lunar` | GCC | none | generic `x86-64` | every x86-64 CPU |
+
+`packages/linux-lunar-v3/prepare.sh` runs linux-lunar's `prepare.sh` with
+`packages/linux-lunar-v3/lunar-distro.cfg` as a second file, appended after
+linux-lunar's, which only sets the package suffix, compiler, LTO and `-march`.
+The kernel releases differ (`7.x.y-N-lunar`, `7.x.y-N-lunar-v3`), so both
+packages can be installed at the same time.
+
+`lunar-distro.cfg` differs from a personal linux-lunar build in `_march`
+(`generic` / `x86-64-v3` instead of `native`: a package must run on more
+than the build machine) and in building non-interactively without user
+patches. Everything else keeps linux-lunar's
 defaults: 1000 Hz, full preemption, periodic tick, the performance governor,
 THP `always`. `lunar-settings` sets the memory values linux-lunar compiles in
 (`vm.defrag_mode=1`, boost 600, proactiveness 50, THP, ...) once more as
@@ -46,7 +61,10 @@ linux-lunar has no `--config-only` mode yet; until it does, `prepare.sh`
 applies `packages/linux-lunar/lunar-config-only.patch`, which also lets the
 build continue when the source folder is read-only.
 
-The live ISO boots linux-lunar as well, with linux-lts as a fallback entry.
+The live ISO boots `linux-lunar` (generic, so it starts on every CPU), with
+linux-lts as a fallback entry. The installer installs `linux-lunar-v3` when
+glibc's loader (`ld-linux-x86-64.so.2 --help`) reports x86-64-v3 as supported
+(the CPU flags in `/proc/cpuinfo` if that fails), `linux-lunar` otherwise.
 
 ## Graphics drivers
 
@@ -87,8 +105,11 @@ Both tools only act on systems installed by Lunar's installer (where
 `lunar-sdboot-update` writes `/boot/loader/entries/lunar-<kernel>.conf` and
 `lunar-<kernel>-fallback.conf` for every installed kernel, using the images
 mkinitcpio keeps in `/boot` (`vmlinuz-<kernel>`, `initramfs-<kernel>.img`).
-It removes entries of removed kernels and makes `linux-lunar` the default
-unless another default is set in `loader.conf`.
+It removes entries of removed kernels and makes `linux-lunar-v3` the default,
+or `linux-lunar` if `-v3` isn't installed, unless another default was set by
+hand in `loader.conf`. A default it chose itself is marked with a comment in
+`loader.conf`, so installing `linux-lunar-v3` later (`pacman -S
+linux-lunar-v3 linux-lunar-v3-headers`) makes it the new default.
 
 A pacman hook runs `lunar-update-cmdline` (and with it `lunar-sdboot-update`)
 after every kernel install, update or removal, and when Lunar's parameter
@@ -107,7 +128,8 @@ only), additional software (`config/modules/netinstall.yaml`), user,
 summary.
 
 The installer is UEFI only and always installs systemd-boot. It installs
-`linux-lunar` (default entry) and `linux-lts`, ranks Arch mirrors with
+`linux-lunar-v3` on CPUs with x86-64-v3, otherwise `linux-lunar` (default
+entry), and `linux-lts`, ranks Arch mirrors with
 reflector, uses zsh for new users, masks rtkit, enables ufw (incoming blocked
 except LocalSend, 53317 tcp/udp), sets `deny = 10` in
 `/etc/security/faillock.conf` (lockout after 10 wrong passwords instead of 3),

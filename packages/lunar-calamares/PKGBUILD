@@ -3,7 +3,8 @@
 # Lunar's installer: upstream Calamares (Qt6) at a pinned release, plus
 #   modules/   two Lunar job modules, built together with the upstream ones:
 #                pacstrap   - installs the system with pacstrap (base packages,
-#                             linux-lunar + linux-lts, tuning profile, microcode)
+#                             linux-lunar-v3 or linux-lunar + linux-lts, tuning
+#                             profile, microcode)
 #                gpudrivers - runs lunar-gpu-setup with the installer's GPU choice
 #   config/    settings.conf, module configs and the package selection
 #              (netinstall.yaml), installed to /etc/calamares
@@ -21,7 +22,7 @@
 pkgname=lunar-calamares
 pkgver=3.3.14
 _commit=21ea803527735cfaf54fa6059e71d1ef65004864  # tag v3.3.14
-pkgrel=7
+pkgrel=8
 pkgdesc='Lunar installer (Calamares)'
 arch=('x86_64')
 url='https://github.com/calamares/calamares'

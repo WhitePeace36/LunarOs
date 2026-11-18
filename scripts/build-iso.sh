@@ -92,8 +92,9 @@ check_list "iso/packages.x86_64" "${pkgs[@]}"
 
 cal="$LUNAR_ROOT/packages/lunar-calamares/config/modules"
 mapfile -t pkgs < <(yaml_list_items "$cal/pacstrap.conf" "$cal/netinstall.yaml")
-pkgs+=(linux-lunar linux-lunar-headers linux-lts linux-lts-headers
-       amd-ucode intel-ucode)
+# pacstrap adds one of the two linux-lunar builds (by CPU), linux-lts and microcode
+pkgs+=(linux-lunar linux-lunar-headers linux-lunar-v3 linux-lunar-v3-headers
+       linux-lts linux-lts-headers amd-ucode intel-ucode)
 check_list "the installer's package selection" "${pkgs[@]}"
 
 msg "Building the ISO (this takes a while)"

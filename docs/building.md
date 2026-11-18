@@ -106,7 +106,7 @@ the next time `build-aur.sh` or `build-packages.sh` runs. Run
 
 | Component | Change | Then |
 |---|---|---|
-| Kernel | `_version` in `packages/linux-lunar/lunar-distro.cfg`, `_commit` in its `prepare.sh` | `scripts/build-packages.sh linux-lunar` |
+| Kernels (`linux-lunar`, `linux-lunar-v3`) | `_version` in `packages/linux-lunar/lunar-distro.cfg`, `_commit` in its `prepare.sh` (both builds use them; `packages/linux-lunar-v3/lunar-distro.cfg` only holds the compiler, LTO and `-march` overrides) | `scripts/build-packages.sh linux-lunar linux-lunar-v3` |
 | Elara, AnanicyConfigurator, PipewireConfigurator, Sysmon, ananicy-cpp, ananicy rules | release the version in the project's repo (tag `vX.Y.Z`, push the tag), then `pkgver=X.Y.Z` and `pkgrel=1` in the package's PKGBUILD | `scripts/build-packages.sh <name>` |
 | Settings | the files and `pkgver` in [lunar-settings](https://github.com/WhitePeace36/lunar-settings), tag `v<pkgver>` and push it, then `_tag` in `packages/lunar-settings/prepare.sh` | `scripts/build-packages.sh lunar-settings` |
 | Calamares | `pkgver` and `_commit` (a release tag) in `packages/lunar-calamares/PKGBUILD`; compare upstream's module configs with `config/modules` | `scripts/build-packages.sh lunar-calamares` |

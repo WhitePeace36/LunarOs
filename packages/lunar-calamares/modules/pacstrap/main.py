@@ -11,7 +11,8 @@
 #   postInstallFiles files copied from the live system into the target
 #
 # Added from the installer's choices and the hardware:
-#   linux-lunar + linux-lts (with headers, for DKMS drivers)
+#   linux-lunar-v3 on CPUs with x86-64-v3 (AVX2), else linux-lunar,
+#   + linux-lts (all with headers, for DKMS drivers)
 #   intel-ucode or amd-ucode
 
 import os
@@ -21,7 +22,10 @@ import subprocess
 
 import libcalamares
 
-KERNELS = ["linux-lunar", "linux-lunar-headers", "linux-lts", "linux-lts-headers"]
+FALLBACK_KERNELS = ["linux-lts", "linux-lts-headers"]
+# CPU flags x86-64-v3 needs (psABI levels v2 + v3; lzcnt is "abm" in cpuinfo)
+X86_64_V3_FLAGS = {"cx16", "lahf_lm", "popcnt", "sse4_1", "sse4_2", "ssse3",
+                   "avx", "avx2", "bmi1", "bmi2", "f16c", "fma", "abm", "movbe", "xsave"}
 _progress_re = re.compile(r"\((\s*\d+)/(\s*\d+)\)")
 
 
@@ -38,6 +42,34 @@ def _microcode():
     except OSError as e:
         libcalamares.utils.warning("pacstrap: can't read /proc/cpuinfo: {!s}".format(e))
     return None
+
+
+def _has_x86_64_v3():
+    """True if this CPU (and the OS, for AVX state) supports x86-64-v3.
+    glibc's loader runs the exact psABI check; /proc/cpuinfo is the fallback."""
+    try:
+        out = subprocess.run(["/usr/lib/ld-linux-x86-64.so.2", "--help"],
+                             capture_output=True, text=True, timeout=10).stdout
+        for line in out.splitlines():
+            line = line.strip()
+            if line.split(" ", 1)[0] == "x86-64-v3":
+                return "supported" in line
+    except (OSError, subprocess.SubprocessError) as e:
+        libcalamares.utils.warning("pacstrap: ld.so --help failed: {!s}".format(e))
+    try:
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                if line.startswith("flags"):
+                    return X86_64_V3_FLAGS <= set(line.split(":", 1)[1].split())
+    except OSError as e:
+        libcalamares.utils.warning("pacstrap: can't read /proc/cpuinfo: {!s}".format(e))
+    return False
+
+
+def _kernels():
+    lunar = "linux-lunar-v3" if _has_x86_64_v3() else "linux-lunar"
+    libcalamares.utils.debug("pacstrap: kernel {!s}".format(lunar))
+    return [lunar, lunar + "-headers"] + FALLBACK_KERNELS
 
 
 def _run(command):
@@ -68,7 +100,7 @@ def run():
 
     pacman_conf = conf.get("pacmanConf", "/usr/share/lunar-calamares/pacman.conf")
     packages = list(conf.get("basePackages", []))
-    packages += KERNELS
+    packages += _kernels()
 
     ucode = _microcode()
     if ucode:

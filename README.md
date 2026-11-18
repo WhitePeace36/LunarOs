@@ -37,7 +37,9 @@ change. Its own packages, and the few AUR packages it ships, come from the
 
 **Performance**
 - [linux-lunar](https://github.com/WhitePeace36/linux-lunar) as the default
-  kernel, Arch's `linux-lts` as fallback
+  kernel, in two builds: `linux-lunar-v3` (Clang ThinLTO, x86-64-v3) on CPUs
+  that support it (Intel Haswell, AMD Zen and newer), `linux-lunar` (GCC,
+  generic x86-64) on all others. Arch's `linux-lts` as fallback
 - [Elara](https://github.com/WhitePeace36/Elara), a sched_ext CPU scheduler
   driven by the nice values that [ananicy-cpp](https://github.com/WhitePeace36/ananicy-cpp-lunar)
   sets from Lunar's [rules](https://github.com/WhitePeace36/ananicy-rules);

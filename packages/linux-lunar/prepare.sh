@@ -2,22 +2,26 @@
 # Prepares linux-lunar for scripts/build-packages.sh:
 #   1. clones github.com/WhitePeace36/linux-lunar at _commit into $1/linux-lunar
 #   2. applies lunar-config-only.patch if the repo doesn't have --config-only yet
-#   3. appends lunar-distro.cfg to customization.cfg
+#   3. appends lunar-distro.cfg to customization.cfg, then the variant file
+#      given as $2 if any (packages/linux-lunar-v3/prepare.sh passes its own)
 #   4. runs ./lunar.sh --config-only (writes .lunar-build.cfg, builds nothing)
 #   5. prints the folder, which build-packages.sh then builds with makechrootpkg
 #
-# To update the kernel: set _version in lunar-distro.cfg and/or _commit
-# below, then scripts/build-packages.sh linux-lunar.
+# To update the kernels: set _version in lunar-distro.cfg and/or _commit
+# below, then scripts/build-packages.sh linux-lunar linux-lunar-v3.
 set -euo pipefail
 
 _repo="https://github.com/WhitePeace36/linux-lunar.git"
 _commit="937f371054ab301f4f315880db807238ffb5ddef"
 
 here="$(cd "$(dirname "$0")" && pwd)"
-work="${1:?usage: prepare.sh <work-dir>}"
+work="${1:?usage: prepare.sh <work-dir> [variant.cfg]}"
+variant="${2:-}"
 src="$work/linux-lunar"
 
 log() { echo "  -> linux-lunar: $*" >&2; }
+
+[[ -z "$variant" || -f "$variant" ]] || { log "ERROR: no such file: $variant"; exit 1; }
 
 git clone -q "$_repo" "$src" >&2
 git -C "$src" checkout -q "$_commit" >&2
@@ -32,7 +36,13 @@ fi
     echo
     echo "#### LUNAR DISTRO OVERRIDES (packages/linux-lunar/lunar-distro.cfg) ####"
     cat "$here/lunar-distro.cfg"
+    if [[ -n "$variant" ]]; then
+        echo
+        echo "#### VARIANT OVERRIDES ($(basename "$(dirname "$variant")")/$(basename "$variant")) ####"
+        cat "$variant"
+    fi
 } >> "$src/customization.cfg"
+log "package linux-$(sed -n 's/^_pkgsuffix="\(.*\)"$/\1/p' "$src/customization.cfg" | tail -n1)"
 
 # Signed kernel.org tarballs: makepkg checks them against the builder's keyring.
 if grep -q '^_pgp_verify="true"' "$here/lunar-distro.cfg"; then
