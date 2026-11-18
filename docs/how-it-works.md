@@ -23,7 +23,7 @@ over packages with the same name in Arch's repositories.
 | `pipewire-configurator` | [PipewireConfigurator](https://github.com/WhitePeace36/PipewireConfigurator) |
 | `ananicy-configurator` | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) |
 | `sysmon` | [Sysmon](https://github.com/WhitePeace36/Sysmon), the system monitor (installed instead of KDE's `plasma-systemmonitor`); Lunar's package gives it the global shortcut Ctrl+Shift+Esc |
-| `lunar-calamares` | Installer: upstream Calamares 3.3 with Lunar's modules, configuration and branding |
+| `lunar-calamares` | Installer: upstream Calamares 3.4 ([Codeberg](https://codeberg.org/Calamares/calamares)) with Lunar's modules, configuration and branding |
 | `lunar-keyring`, `lunar-mirrorlist` | Signing key and servers of `[lunar]` (GitHub, GitLab as mirror) |
 
 The AUR packages are listed in `packages/aur-packages.txt`.
@@ -123,7 +123,7 @@ keeps the boot loader itself up to date. The ESP is mounted at `/boot`.
 
 ## Installer
 
-Upstream Calamares 3.3 (Qt6), built with two Lunar job modules
+Upstream Calamares 3.4 (Qt6, from Codeberg), built with two Lunar job modules
 (`packages/lunar-calamares/modules`): `pacstrap` installs the system straight
 from the repositories (no image), and `gpudrivers` runs `lunar-gpu-setup`.
 
