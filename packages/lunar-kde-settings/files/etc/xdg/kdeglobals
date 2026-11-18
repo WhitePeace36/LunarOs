@@ -1,4 +1,5 @@
 [General]
+BrowserApplication=librewolf.desktop
 ColorScheme=BreezeDark
 
 [Icons]

@@ -1,0 +1,8 @@
+# Lunar's default applications (lunar-kde-settings). A user's own choice in
+# System Settings > Default Applications goes to ~/.config/mimeapps.list and
+# wins over this file. Entries for apps that aren't installed are skipped.
+[Default Applications]
+x-scheme-handler/http=librewolf.desktop
+x-scheme-handler/https=librewolf.desktop
+text/html=librewolf.desktop
+application/xhtml+xml=librewolf.desktop

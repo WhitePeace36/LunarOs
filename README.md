@@ -61,7 +61,7 @@ change. Its own packages, and the few AUR packages it ships, come from the
 
 **Apps**
 - Gaming: Steam, Lutris, ProtonUp-Qt, MangoHud
-- Internet: Brave, LibreWolf, LocalSend, Remmina (RDP/VNC)
+- Internet: LibreWolf (default browser), Brave, LocalSend, Remmina (RDP/VNC)
 - Office: OnlyOffice, printing (CUPS, HP drivers) and scanning (Simple Scan)
 - Flatpak with Flathub and Flatseal, AppImageLauncher, balenaEtcher
 - No AUR helper is installed
