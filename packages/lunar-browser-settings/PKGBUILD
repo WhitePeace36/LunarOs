@@ -1,0 +1,45 @@
+# Maintainer: Timon <timon2201@gmail.com>
+#
+# Lunar's defaults for Brave and LibreWolf:
+#
+# Brave (/etc/brave/policies, Chromium policies; check them in brave://policy)
+#   managed/lunar.json      enforced, because Brave/Chromium allow these only as
+#                           enforced policies:
+#                           - DNS over HTTPS "automatic" with Quad9 (falls back to
+#                             the system's DNS); Chromium turns DoH off on managed
+#                             browsers unless this policy is set
+#                           - Shields: HTTPS upgrade "strict" (HTTPS only, all windows)
+#                           - fingerprinting protection off
+#   recommended/lunar.json  defaults the user can change: no "save password?",
+#                           no saving/filling payment methods, DuckDuckGo
+#   Dark mode: no policy; Brave follows the system theme (Breeze Dark on Lunar).
+#   uBlock Origin: Brave only offers it at brave://settings/extensions/v2 (served
+#   by Brave since the Chrome Web Store dropped it); Shields block ads by default.
+#
+# LibreWolf (/etc/skel/.config/librewolf/librewolf/librewolf.overrides.cfg,
+# read after LibreWolf's librewolf.cfg; new users get it)
+#   DNS over HTTPS "increased protection" (Quad9), resistFingerprinting off,
+#   dark websites. LibreWolf itself already ships uBlock Origin, DuckDuckGo,
+#   HTTPS-only mode, no password saving and no payment autofill.
+
+pkgname=lunar-browser-settings
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Lunar - Brave and LibreWolf defaults (DNS over HTTPS, HTTPS only, no password/payment saving, DuckDuckGo, fingerprinting protection off)'
+arch=('any')
+url='https://github.com/WhitePeace36/LunarOs'
+license=('GPL-2.0-only')
+optdepends=('brave-bin: uses /etc/brave/policies'
+            'librewolf: new users get librewolf.overrides.cfg')
+backup=('etc/brave/policies/managed/lunar.json'
+        'etc/brave/policies/recommended/lunar.json'
+        'etc/skel/.config/librewolf/librewolf/librewolf.overrides.cfg')
+
+package() {
+  install -Dm644 "$startdir/files/etc/brave/policies/managed/lunar.json" \
+    "$pkgdir/etc/brave/policies/managed/lunar.json"
+  install -Dm644 "$startdir/files/etc/brave/policies/recommended/lunar.json" \
+    "$pkgdir/etc/brave/policies/recommended/lunar.json"
+  install -Dm644 "$startdir/files/etc/skel/.config/librewolf/librewolf/librewolf.overrides.cfg" \
+    "$pkgdir/etc/skel/.config/librewolf/librewolf/librewolf.overrides.cfg"
+}

@@ -62,6 +62,9 @@ change. Its own packages, and the few AUR packages it ships, come from the
 **Apps**
 - Gaming: Steam, Lutris, ProtonUp-Qt, MangoHud
 - Internet: LibreWolf (default browser), Brave, LocalSend, Remmina (RDP/VNC)
+  - both browsers: DNS over HTTPS, HTTPS only, no "save password?", no
+    payment autofill, DuckDuckGo, fingerprinting protection off; uBlock Origin
+    in LibreWolf (Brave blocks ads with Shields)
 - Office: OnlyOffice, printing (CUPS, HP drivers) and scanning (Simple Scan)
 - Flatpak with Flathub and Flatseal, AppImageLauncher, balenaEtcher
 - No AUR helper is installed

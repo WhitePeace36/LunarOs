@@ -18,5 +18,6 @@ sysmon
 lunar-settings
 lunar-wallpapers
 lunar-kde-settings
+lunar-browser-settings
 lunar-zsh-config
 lunar-calamares

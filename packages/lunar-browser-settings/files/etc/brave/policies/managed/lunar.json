@@ -1,0 +1,6 @@
+{
+  "DnsOverHttpsMode": "automatic",
+  "DnsOverHttpsTemplates": "https://dns10.quad9.net/dns-query",
+  "DefaultBraveHttpsUpgradeSetting": 2,
+  "DefaultBraveFingerprintingV2Setting": 1
+}

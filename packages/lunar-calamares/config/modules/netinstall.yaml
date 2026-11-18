@@ -170,6 +170,7 @@
     - brave-bin            # [lunar]
     - librewolf
     - localsend-bin        # [lunar]
+    - lunar-browser-settings  # [lunar] Brave/LibreWolf defaults
 
 - name: "Remote desktop"
   description: "Remmina with RDP (FreeRDP) and VNC"
