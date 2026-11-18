@@ -1,0 +1,12 @@
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Target = usr/lib/librewolf/distribution/policies.json
+Target = usr/share/lunar-browser-settings/librewolf-policies.json
+
+[Action]
+Description = Merging LibreWolf's policies with Lunar's...
+When = PostTransaction
+Exec = /usr/lib/lunar/librewolf-policies

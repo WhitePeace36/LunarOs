@@ -1,0 +1,9 @@
+post_remove() {
+    # the merge script and its hook are gone with the package: remove the
+    # merged LibreWolf policies (only Lunar's), so LibreWolf's own apply again
+    local out=/etc/librewolf/policies/policies.json
+    if [[ -f "$out" ]] && grep -q '"lunar_generated"' "$out"; then
+        rm -f "$out"
+        rmdir --ignore-fail-on-non-empty /etc/librewolf/policies /etc/librewolf 2>/dev/null || true
+    fi
+}

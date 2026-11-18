@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# lunar-librewolf-policies - write /etc/librewolf/policies/policies.json:
+# LibreWolf's own policies plus Lunar's (lunar-browser-settings).
+#
+# LibreWolf reads /etc/librewolf/policies/policies.json INSTEAD of its own
+# /usr/lib/librewolf/distribution/policies.json, so the file has to hold both.
+# A pacman hook runs this after every LibreWolf or lunar-browser-settings
+# install, upgrade and removal. A policies.json that this script didn't
+# write (no "lunar_generated" key) is never touched.
+#
+# Lunar's part (/usr/share/lunar-browser-settings/librewolf-policies.json):
+#   NoDefaultBookmarks false   LibreWolf blocks importing bookmarks into new
+#                              profiles; Lunar's bookmarks file replaces
+#                              Firefox's default bookmarks instead
+#   DisplayBookmarksToolbar    "always" once per profile (users can hide it)
+#   browser.bookmarks.file     new profiles start with Lunar's bookmarks
+#                              (Youtube on the toolbar); existing ones keep theirs
+set -euo pipefail
+
+src=/usr/lib/librewolf/distribution/policies.json
+lunar=/usr/share/lunar-browser-settings/librewolf-policies.json
+out=/etc/librewolf/policies/policies.json
+mark=lunar_generated
+
+log() { echo "==> lunar-librewolf-policies: $*"; }
+ours() { [[ -f "$out" ]] && jq -e --arg m "$mark" 'has($m)' "$out" >/dev/null 2>&1; }
+
+if [[ ! -f "$src" || ! -f "$lunar" ]]; then
+    # LibreWolf or Lunar's part is gone: LibreWolf's own policies apply again
+    if ours; then
+        rm -f "$out"
+        rmdir --ignore-fail-on-non-empty /etc/librewolf/policies /etc/librewolf 2>/dev/null || true
+        log "removed $out"
+    fi
+    exit 0
+fi
+if [[ -f "$out" ]] && ! ours; then
+    log "WARNING: $out was not written by Lunar, leaving it alone"
+    exit 0
+fi
+
+mkdir -p "${out%/*}"
+tmp="$(mktemp "$out.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT
+jq -s --arg m "$mark" --arg note "written by $0 from $src and $lunar; changes here are overwritten" \
+    '(.[0] * .[1]) + {($m): $note}' "$src" "$lunar" > "$tmp"
+chmod 644 "$tmp"
+if cmp -s "$tmp" "$out" 2>/dev/null; then
+    exit 0
+fi
+mv "$tmp" "$out"
+trap - EXIT
+log "wrote $out"

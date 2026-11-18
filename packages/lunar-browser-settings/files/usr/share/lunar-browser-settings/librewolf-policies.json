@@ -1,0 +1,12 @@
+{
+  "policies": {
+    "NoDefaultBookmarks": false,
+    "DisplayBookmarksToolbar": "always",
+    "Preferences": {
+      "browser.bookmarks.file": {
+        "Value": "/usr/share/lunar-browser-settings/bookmarks.html",
+        "Status": "default"
+      }
+    }
+  }
+}
