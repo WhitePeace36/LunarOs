@@ -23,10 +23,14 @@
 #   -u, --umount        unmount DIR and exit
 #   -h, --help          show this help
 #
-# Root file systems: ext2/3/4, XFS, Btrfs (any subvolume layout) and F2FS, on
-# plain partitions, LUKS, LVM and mdadm RAID. Encrypted partitions are
-# unlocked first (you are asked for each one); disks listed in the system's
-# /etc/crypttab are unlocked with their key files where possible.
+# Root file systems: ext2/3/4, XFS, Btrfs (any subvolume layout, also a RAID
+# with a missing disk) and F2FS, on plain partitions, LUKS, LVM and mdadm
+# RAID. Encrypted partitions are unlocked first (you are asked for each one);
+# disks listed in the system's /etc/crypttab are unlocked with their key
+# files where possible. An EFI partition missing from fstab (systemd mounts
+# it by partition type) is found and mounted too. Paths from the disk never
+# reach outside the mount folder, and a hibernated system is not touched
+# without asking.
 set -uo pipefail
 
 if [[ $EUID -ne 0 ]]; then
@@ -103,15 +107,18 @@ cleanup() {
         done < <(active_vgs)
     fi
     if [[ $keep -eq 1 ]] && mountpoint -q "$mnt"; then
-        if [[ $(( ${#our_vgs[@]} + ${#opened_luks[@]} )) -gt 0 ]]; then
-            { for vg in "${our_vgs[@]}"; do echo "vg $vg"; done
-              for i in "${opened_luks[@]}"; do echo "luks $i"; done; } >> "$state"
+        if [[ $reused -eq 0 ]]; then   # a fresh mount: replace any old state
+            rm -f "$state"
+            if [[ $(( ${#our_vgs[@]} + ${#opened_luks[@]} )) -gt 0 ]]; then
+                { for vg in "${our_vgs[@]}"; do echo "vg $vg"; done
+                  for i in "${opened_luks[@]}"; do echo "luks $i"; done; } > "$state"
+            fi
         fi
         msg "Left mounted at $mnt"
         msg2 "go back in: lunar-chroot      unmount and lock: lunar-chroot --umount"
         exit "$rc"
     fi
-    if mountpoint -q "$mnt"; then
+    if [[ $mounted -eq 1 ]] && mountpoint -q "$mnt"; then   # only what we mounted
         msg "Unmounting $mnt"
         sync
         if ! umount -R "$mnt" 2>/dev/null; then
@@ -127,12 +134,31 @@ cleanup() {
         cryptsetup close "${opened_luks[i]}" 2>/dev/null \
             || warn "could not lock ${opened_luks[i]} again (still in use?)"
     done
+    [[ $made_mnt -eq 1 ]] && rmdir "$mnt" 2>/dev/null
     exit "$rc"
 }
+reused=0
+mounted=0   # set once $mnt is ours to unmount
+made_mnt=0
 trap cleanup EXIT
-trap 'exit 130' INT TERM
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
 
-# lsblk -P line -> variables (no eval: device data is not trusted)
+# Text from the disks goes to the terminal: drop control characters.
+clean() { tr -d '\000-\037\177'; }
+
+# "$mnt$path" resolved, if it stays inside $mnt (fstab paths and symlinks on
+# the disk must never lead into the live system). -m: may not exist yet.
+inside() {  # <path inside the target>
+    local p
+    [[ "/$1/" == */../* ]] && return 1
+    p="$(realpath -m -- "$mnt$1")" || return 1
+    [[ "$p" == "$mnt" || "$p" == "$mnt"/* ]] || return 1
+    printf '%s' "$p"
+}
+
+# lsblk/findmnt -P line -> one field (no eval: disk data is not trusted)
 lsblk_field() {  # <line> <KEY>
     local re="(^| )$2=\"([^\"]*)\""
     [[ "$1" =~ $re ]] && printf '%s' "${BASH_REMATCH[2]}"
@@ -160,8 +186,8 @@ os_name() {
     local root="$1" f name
     for f in "$root/usr/lib/os-release" "$root/etc/os-release"; do
         [[ -f "$f" && ! -L "$f" ]] || continue
-        name="$(sed -n 's/^PRETTY_NAME=//p' "$f" | head -n1 | tr -d "\"'")"
-        [[ -n "$name" ]] || name="$(sed -n 's/^NAME=//p' "$f" | head -n1 | tr -d "\"'")"
+        name="$(sed -n 's/^PRETTY_NAME=//p' "$f" | head -n1 | tr -d "\"'" | clean | cut -c1-60)"
+        [[ -n "$name" ]] || name="$(sed -n 's/^NAME=//p' "$f" | head -n1 | tr -d "\"'" | clean | cut -c1-60)"
         printf '%s' "${name:-Linux}"
         return 0
     done
@@ -175,13 +201,15 @@ scan_mount() {  # <dev> <fstype> [extra opts]
         ext2|ext3|ext4) mount -t "$fs" -o "ro,noload$extra" "$dev" "$scan_dir" 2>/dev/null && return 0 ;;
         xfs)            mount -t xfs -o "ro,norecovery$extra" "$dev" "$scan_dir" 2>/dev/null && return 0 ;;
     esac
-    mount -t "$fs" -o "ro$extra" "$dev" "$scan_dir" 2>/dev/null
+    mount -t "$fs" -o "ro$extra" "$dev" "$scan_dir" 2>/dev/null && return 0
+    # a Btrfs RAID with a missing disk
+    [[ "$fs" == btrfs ]] && mount -t btrfs -o "ro,degraded$extra" "$dev" "$scan_dir" 2>/dev/null
 }
 
 # ---------------------------------------------------------------- --umount
 
 if [[ $do_umount -eq 1 ]]; then
-    keep=0
+    keep=0 mounted=1
     if [[ -f "$state" ]]; then
         while read -r kind name; do
             case "$kind" in vg) our_vgs+=("$name") ;; luks) opened_luks+=("$name") ;; esac
@@ -195,12 +223,15 @@ fi
 # Already mounted by an earlier --keep run: go straight back in.
 if mountpoint -q "$mnt" && [[ -z "$device" && $list_only -eq 0 ]]; then
     msg "Using what is already mounted at $mnt"
-    keep=1
+    keep=1 reused=1
     trap : INT
     arch-chroot "$mnt" "${cmd[@]}"
     exit $?
 fi
-mountpoint -q "$mnt" && die "$mnt is already in use - run lunar-chroot --umount, or pick another folder with --mount"
+if mountpoint -q "$mnt"; then
+    [[ $list_only -eq 1 ]] && keep=1 reused=1   # only looking: leave it alone
+    [[ $list_only -eq 1 ]] || die "$mnt is already in use - run lunar-chroot --umount, or pick another folder with --mount"
+fi
 
 # ---------------------------------------------------------------- unlock
 
@@ -265,11 +296,19 @@ is_snapshot() {
     # snapper (@/.snapshots/N/snapshot, @snapshots/N/snapshot), timeshift
     [[ "$1" == *snapshots/* || "$1" == timeshift-btrfs/* ]]
 }
+# Container images (Docker, Podman, nspawn, LXC/Incus) have an os-release too.
+is_container() {
+    case "/$1/" in
+        */var/lib/docker/*|*/var/lib/containers/*|*/var/lib/machines/*|*/var/lib/lxc/*|*/var/lib/lxd/*|*/var/lib/incus/*|*/var/lib/portables/*)
+            return 0 ;;
+    esac
+    return 1
+}
 
 scan_dir="$(mktemp -d /run/lunar-chroot-scan.XXXXXX)" || die "could not create a scan folder"
 seen_btrfs=" "
 msg "Looking for installed systems"
-while IFS= read -r line; do
+while IFS= read -r -u 3 line; do
     dev="$(lsblk_field "$line" NAME)"
     fs="$(lsblk_field "$line" FSTYPE)"
     type="$(lsblk_field "$line" TYPE)"
@@ -296,9 +335,18 @@ while IFS= read -r line; do
             [[ "$s" == "$default" ]] || subs+=("$s")
         done < <(btrfs subvolume list "$scan_dir" 2>/dev/null | sed -n 's/.* path //p')
         subs+=("")   # the top level itself
+        found=()
         for s in "${subs[@]}"; do
-            [[ -n "$s" ]] && is_snapshot "$s" && continue
+            if [[ -n "$s" ]]; then
+                is_snapshot "$s" && continue
+                is_container "$s" && continue
+                # nested inside a system already found (e.g. @/var/lib/...)
+                nested=0
+                for f in "${found[@]}"; do [[ -n "$f" && "$s" == "$f"/* ]] && nested=1; done
+                [[ $nested -eq 1 ]] && continue
+            fi
             name="$(os_name "$scan_dir${s:+/$s}")" || continue
+            found+=("$s")
             add_candidate "$dev" btrfs "$s" "$name" "$size"
         done
         umount "$scan_dir"
@@ -307,7 +355,7 @@ while IFS= read -r line; do
         name="$(os_name "$scan_dir")" && add_candidate "$dev" "$fs" "" "$name" "$size"
         umount "$scan_dir"
     fi
-done < <(lsblk -Ppno NAME,FSTYPE,TYPE,SIZE,UUID,MOUNTPOINT)
+done 3< <(lsblk -Ppno NAME,FSTYPE,TYPE,SIZE,UUID,MOUNTPOINT)
 rmdir "$scan_dir"; scan_dir=
 
 describe() {  # <index>
@@ -392,42 +440,73 @@ fi
 # ---------------------------------------------------------------- mount
 
 root_dev="${c_dev[pick]}" root_fs="${c_fs[pick]}" root_sub="${c_sub[pick]}"
-mkdir -p "$mnt"
+
+# A hibernated system must not be changed: resuming it afterwards would
+# write back an old state of its file systems.
+if lsblk -nrpo FSTYPE 2>/dev/null | grep -qx swsuspend; then
+    warn "A swap partition holds a hibernated system. Changing its disks now can"
+    warn "corrupt them when it resumes - better boot it normally and shut it down."
+    ans=n
+    (( have_tty )) && read -r -p "Continue anyway? [y/N] " ans </dev/tty
+    [[ "$ans" =~ ^[Yy] ]] || exit 1
+fi
+
+if [[ ! -d "$mnt" ]]; then
+    mkdir -p "$mnt" || die "could not create $mnt"
+    made_mnt=1
+fi
 root_opts=rw
 if [[ "$root_fs" == btrfs ]]; then
     if [[ -n "$root_sub" ]]; then root_opts+=",subvol=/$root_sub"; else root_opts+=",subvolid=5"; fi
 fi
 msg "Mounting $root_dev at $mnt"
-mount -t "$root_fs" -o "$root_opts" "$root_dev" "$mnt" \
-    || die "could not mount $root_dev (a file system check may help: fsck / xfs_repair / btrfs check)"
+if ! err="$(mount -t "$root_fs" -o "$root_opts" "$root_dev" "$mnt" 2>&1)"; then
+    if [[ "$root_fs" == btrfs ]] && mount -t btrfs -o "$root_opts,degraded" "$root_dev" "$mnt" 2>/dev/null; then
+        warn "mounted degraded: a disk of this Btrfs RAID is missing"
+    else
+        printf '%s\n' "$err" >&2
+        die "could not mount $root_dev (a file system check may help: fsck / xfs_repair / btrfs check)"
+    fi
+fi
+mounted=1
 
-# Disks in the system's crypttab that are still locked (e.g. a second disk
-# for /home, unlocked at boot with a key file stored on the root).
+# Disks in the system's crypttab (e.g. a second disk for /home, unlocked at
+# boot with a key file stored on the root).
 crypttab="$mnt/etc/crypttab"
 if [[ -f "$crypttab" ]] && has cryptsetup; then
     while read -r -u 3 name src key _; do
         [[ -z "$name" || "$name" == \#* ]] && continue
+        [[ "$name" =~ ^[A-Za-z0-9._+-]+$ ]] || continue
         [[ -e "/dev/mapper/$name" ]] && continue
         case "$src" in
-            UUID=*)     src="/dev/disk/by-uuid/${src#UUID=}" ;;
-            PARTUUID=*) src="/dev/disk/by-partuuid/${src#PARTUUID=}" ;;
-            LABEL=*)    src="/dev/disk/by-label/${src#LABEL=}" ;;
+            UUID=*|PARTUUID=*|LABEL=*|PARTLABEL=*) src="$(findfs "$src" 2>/dev/null)" ;;
         esac
-        [[ -b "$src" ]] || continue
+        [[ -n "$src" && -b "$src" ]] || continue
         cryptsetup isLuks "$src" 2>/dev/null || continue
-        # skip devices that are already open under another name
-        lsblk -nrpo TYPE "$src" | tail -n +2 | grep -qx crypt && continue
-        if [[ -n "$key" && "$key" != none && "$key" != - && "$key" == /* && -f "$mnt$key" ]]; then
-            msg2 "unlocking $name with key file $key"
-            open_luks "$src" "$name" "$mnt$key" && continue
+        # Already unlocked above as luks-<uuid>: give it the crypttab name,
+        # so /dev/mapper/<name> in fstab works.
+        cur="$(lsblk -nrpo NAME,TYPE "$src" | awk '$2 == "crypt" { print $1; exit }')"
+        if [[ -n "$cur" ]]; then
+            cur="${cur##*/}"
+            for i in "${!opened_luks[@]}"; do
+                [[ "${opened_luks[i]}" == "$cur" ]] || continue
+                dmsetup rename "$cur" "$name" >/dev/null 2>&1 \
+                    && { opened_luks[i]="$name"; msg2 "$cur is called $name in crypttab, renamed it"; }
+            done
+            continue
         fi
-        (( have_tty )) && read -r -p "Unlock $name ($src) from crypttab? [Y/n] " ans </dev/tty || ans=n
+        if [[ -n "$key" && "$key" != none && "$key" != - && "$key" == /* ]] \
+           && keyfile="$(inside "$key")" && [[ -f "$keyfile" ]]; then
+            msg2 "unlocking $name with key file $key"
+            open_luks "$src" "$name" "$keyfile" && continue
+        fi
+        ans=n
+        (( have_tty )) && read -r -p "Unlock $name ($src) from crypttab? [Y/n] " ans </dev/tty
         [[ "$ans" =~ ^[Nn] ]] || open_luks "$src" "$name" || warn "could not unlock $name"
     done 3< "$crypttab"
     activate_lvm
 fi
 
-# Everything else from the system's fstab, parents before children.
 fstab="$mnt/etc/fstab"
 if [[ -f "$fstab" && "$root_fs" == btrfs ]]; then
     # the root's own options (compress=..., noatime) as the system uses them
@@ -435,39 +514,90 @@ if [[ -f "$fstab" && "$root_fs" == btrfs ]]; then
              | tr ',' '\n' | grep -Ev '^(subvol|subvolid)=|^(ro|rw|defaults|x-.*)$' | paste -sd,)"
     [[ -n "$ropts" ]] && mount -o "remount,$ropts" "$mnt" 2>/dev/null
 fi
+
+# fstab entries (findmnt -P: empty fields stay in place), parents first.
+fstab_entries() {
+    local l t d
+    findmnt -Pn --fstab --tab-file "$fstab" -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null |
+    while IFS= read -r l; do
+        t="$(printf '%b' "$(lsblk_field "$l" TARGET)")"
+        d="${t//[^\/]/}"
+        printf '%d\t%s\n' "${#d}" "$l"
+    done | sort -s -n -k1,1 | cut -f2-
+}
+
 if [[ -f "$fstab" ]]; then
-    while IFS=$'\t' read -r _ src tgt fstype opts; do
-        src="$(printf '%b' "$src")" tgt="$(printf '%b' "$tgt")"
+    while IFS= read -r -u 3 l; do
+        spec="$(printf '%b' "$(lsblk_field "$l" SOURCE)")"
+        tgt="$(printf '%b' "$(lsblk_field "$l" TARGET)")"
+        fstype="$(lsblk_field "$l" FSTYPE)"
+        opts="$(lsblk_field "$l" OPTIONS)"
         [[ "$tgt" == /?* ]] || continue                  # / itself, swap
-        [[ ",$opts," == *,noauto,* ]] && continue
+        # noauto + automount (often the ESP) is mounted on first use at
+        # boot, so it belongs to the system: mount it.
+        [[ ",$opts," == *,noauto,* && ",$opts," != *,x-systemd.automount,* ]] && continue
         case "$fstype" in
-            swap|proc|sysfs|devpts|devtmpfs|tmpfs|efivarfs|securityfs|cgroup*|debugfs|tracefs|configfs|mqueue|hugetlbfs) continue ;;
-            nfs*|cifs|smb3|sshfs|fuse*|9p|virtiofs|davfs) msg2 "skipping network/FUSE mount $tgt"; continue ;;
+            swap|proc|sysfs|devpts|devtmpfs|tmpfs|ramfs|efivarfs|securityfs|cgroup*|debugfs|tracefs|configfs|mqueue|hugetlbfs|bpf|pstore|fusectl) continue ;;
+            nfs*|cifs|smb3|sshfs|fuse*|9p|virtiofs|davfs|glusterfs|ceph) msg2 "skipping network/FUSE mount $tgt"; continue ;;
         esac
         [[ ",$opts," == *,_netdev,* ]] && { msg2 "skipping network mount $tgt"; continue; }
-        mountpoint -q "$mnt$tgt" && continue
+        real="$(inside "$tgt")" || { warn "$tgt leads outside the system (.. or a symlink), skipping it"; continue; }
+        mountpoint -q "$real" && continue
         if [[ ",$opts," == *,bind,* || ",$opts," == *,rbind,* ]]; then
-            mkdir -p "$mnt$tgt"
-            mount --bind "$mnt$src" "$mnt$tgt" && msg2 "$tgt (bind of $src)" || warn "could not bind $src to $tgt"
+            if from="$(inside "$spec")" && [[ -e "$from" ]]; then
+                if mkdir -p "$real" && mount --bind "$from" "$real"; then
+                    msg2 "$tgt (bind of $spec)"
+                else
+                    warn "could not bind $spec to $tgt"
+                fi
+            else
+                warn "$tgt: bind source $spec is missing or outside the system, skipping it"
+            fi
             continue
         fi
-        # --evaluate turned UUID=... into a path; if not, the disk is missing
-        if [[ ! -b "$src" ]]; then
-            warn "$tgt: $src not found (a locked or missing disk?), skipping it"
+        case "$spec" in
+            UUID=*|PARTUUID=*|LABEL=*|PARTLABEL=*) src="$(findfs "$spec" 2>/dev/null)" ;;
+            *) src="$spec" ;;
+        esac
+        if [[ -z "$src" || ! -b "$src" ]]; then
+            warn "$tgt: $spec not found (a locked or missing disk?), skipping it"
             continue
         fi
-        mkdir -p "$mnt$tgt"
-        if mount -t "$fstype" -o "$opts" "$src" "$mnt$tgt"; then
-            msg2 "$tgt ($src, $fstype)"
+        mkdir -p "$real"
+        t=(); [[ -n "$fstype" && "$fstype" != auto ]] && t=(-t "$fstype")
+        if mount "${t[@]}" -o "${opts:-defaults}" "$src" "$real"; then
+            msg2 "$tgt ($src${fstype:+, $fstype})"
         else
             warn "could not mount $tgt ($src), skipping it"
         fi
-    done < <(findmnt -rn --fstab --tab-file "$fstab" --evaluate -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null \
-             | while read -r s t f o; do
-                   d="${t//[^\/]/}"; printf '%d\t%s\t%s\t%s\t%s\n' "${#d}" "$s" "$t" "$f" "$o"
-               done | sort -s -n -k1,1)
+    done 3< <(fstab_entries)
 else
     warn "$root_dev has no /etc/fstab; only / is mounted"
+fi
+
+# No ESP in fstab (systemd mounts it by partition type at boot): find it on
+# the system's disk, so boot loader and initramfs updates reach it.
+if ! mountpoint -q "$mnt/boot" && ! mountpoint -q "$mnt/efi" && ! mountpoint -q "$mnt/boot/efi"; then
+    esps=()
+    while read -r d; do
+        while read -r p pt; do
+            [[ "${pt,,}" == c12a7328-f81f-11d2-ba4b-00a0c93ec93b ]] && esps+=("$p")
+        done < <(lsblk -nrpo NAME,PARTTYPE "$d" 2>/dev/null)
+    done < <(lsblk -nrpso NAME,TYPE "$root_dev" 2>/dev/null | awk '$2 == "disk" || $2 == "loop" { print $1 }' | sort -u)
+    if [[ ${#esps[@]} -eq 1 ]]; then
+        esp_tgt=
+        if b="$(inside /boot)" && [[ -d "$b" && -z "$(ls -A "$b" 2>/dev/null)" ]]; then esp_tgt=/boot
+        elif b="$(inside /efi)" && [[ -d "$b" ]]; then esp_tgt=/efi
+        elif b="$(inside /boot/efi)" && [[ -d "$b" ]]; then esp_tgt=/boot/efi
+        fi
+        if [[ -n "$esp_tgt" ]] && mount -t vfat -o umask=0077 "${esps[0]}" "$b"; then
+            msg2 "$esp_tgt (${esps[0]}, EFI partition: not in fstab, found by its partition type)"
+        else
+            warn "EFI partition ${esps[0]} is not in fstab and has no empty /boot or /efi to go to; mount it yourself if needed"
+        fi
+    elif [[ ${#esps[@]} -gt 1 ]]; then
+        warn "no EFI partition in fstab and several on the disk (${esps[*]}): mount the right one yourself, e.g. mount ${esps[0]} $mnt/boot"
+    fi
 fi
 
 # ---------------------------------------------------------------- chroot
@@ -476,6 +606,8 @@ echo >&2
 findmnt -R -o TARGET,SOURCE,FSTYPE "$mnt" >&2
 echo >&2
 if [[ ${#cmd[@]} -eq 0 ]]; then
+    # arch-chroot starts bash; not every system has it
+    [[ -e "$mnt/usr/bin/bash" || -e "$mnt/bin/bash" ]] || cmd=(/bin/sh)
     msg "Entering ${c_name[pick]} - type 'exit' or press Ctrl+D to leave"
     msg2 "common repairs: pacman -Syu | mkinitcpio -P | bootctl install | passwd <user>"
 fi
