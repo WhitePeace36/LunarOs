@@ -3,4 +3,5 @@
 
   Install from the desktop with "Install Lunar", or run: lunar-install
   Wi-Fi: use the network icon in the panel (or nmtui on the console).
+  Repair an installed system (boot loader, initramfs, updates): lunar-chroot
 

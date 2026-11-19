@@ -22,5 +22,9 @@ from Arch's `releng` profile (archiso v92) and changed for Lunar:
   `airootfs/etc/pacman.conf`, the same one installed systems get.
 - Launcher: `/usr/local/bin/lunar-install` and `lunar-install.desktop`
   (menu and desktop). Installer log: `~/lunar-install.log`.
+- Repairs: `/usr/local/bin/lunar-chroot` finds installed systems (ext4, XFS,
+  Btrfs subvolumes, F2FS; on LUKS, LVM or RAID), unlocks and mounts one with
+  everything in its fstab and opens a shell in it via arch-chroot.
+  `lunar-chroot --help` lists the options.
 
 Build with `scripts/build-iso.sh` (needs `archiso`); the ISO lands in `iso/out/`.
