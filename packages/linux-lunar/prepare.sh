@@ -7,8 +7,10 @@
 #   4. runs ./lunar.sh --config-only (writes .lunar-build.cfg, builds nothing)
 #   5. prints the folder, which build-packages.sh then builds with makechrootpkg
 #
-# To update the kernels: set _version in lunar-distro.cfg and/or _commit
-# below, then scripts/build-packages.sh linux-lunar linux-lunar-v3.
+# To update the kernels: set _version in lunar-distro.cfg and in
+# packages/linux-lunar-v3/lunar-distro.cfg (prepare.sh stops when they
+# differ) and/or _commit below, then
+# scripts/build-packages.sh linux-lunar linux-lunar-v3.
 set -euo pipefail
 
 _repo="https://github.com/WhitePeace36/linux-lunar.git"
@@ -22,6 +24,18 @@ src="$work/linux-lunar"
 log() { echo "  -> linux-lunar: $*" >&2; }
 
 [[ -z "$variant" || -f "$variant" ]] || { log "ERROR: no such file: $variant"; exit 1; }
+
+# The variant file repeats _version and, appended last, wins: both builds
+# must be the same release, so a bump that missed one of the files stops here
+cfg_version() { sed -n 's/^_version="\(.*\)"$/\1/p' "$1" | tail -n1; }
+if [[ -n "$variant" ]]; then
+    base_version="$(cfg_version "$here/lunar-distro.cfg")"
+    variant_version="$(cfg_version "$variant")"
+    if [[ -n "$variant_version" && "$variant_version" != "$base_version" ]]; then
+        log "ERROR: _version is $base_version in packages/linux-lunar/lunar-distro.cfg but $variant_version in $(basename "$(dirname "$variant")")/$(basename "$variant"); set the same release in both"
+        exit 1
+    fi
+fi
 
 git clone -q "$_repo" "$src" >&2
 git -C "$src" checkout -q "$_commit" >&2
