@@ -22,7 +22,7 @@
 pkgname=lunar-calamares
 pkgver=3.4.3
 _commit=af2eaf829b7c60ae5b69b9fe68f9158dc98d3331  # tag v3.4.3
-pkgrel=2
+pkgrel=3
 pkgdesc='Lunar installer (Calamares)'
 arch=('x86_64')
 url='https://codeberg.org/Calamares/calamares'
@@ -72,7 +72,7 @@ sha256sums=('SKIP')
 
 # Upstream modules Lunar doesn't use (other distros, QML variants, examples)
 _skip_modules=(
-  contextualprocess displaymanager dracut dracutlukscfg dummycpp dummyprocess
+  contextualprocess dracut dracutlukscfg dummycpp dummyprocess
   dummypython finishedq fsresizer grubcfg initramfs initramfscfg
   interactiveterminal keyboardq license localeq luksopenswaphookcfg mkinitfs
   notesqml oemid openrcdmcryptcfg packagechooserq plasmalnf preservefiles
