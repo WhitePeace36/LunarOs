@@ -14,8 +14,8 @@
 # PKGBUILD only, raise pkgrel.
 
 pkgname=lunar-ananicy-rules
-pkgver=1.0.0
-pkgrel=3
+pkgver=1.0.1
+pkgrel=1
 pkgdesc='Lunar - ananicy-cpp rules tuned for the Elara scheduler'
 arch=('any')
 url='https://github.com/WhitePeace36/ananicy-rules'
