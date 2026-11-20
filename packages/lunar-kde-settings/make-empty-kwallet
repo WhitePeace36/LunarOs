@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+# make-empty-kwallet <dir>: create <dir>/kdewallet.kwl and <dir>/kdewallet.salt,
+# a KWallet wallet "kdewallet" with an EMPTY password. Build helper of
+# lunar-kde-settings (the PKGBUILD runs it inside dbus-run-session); the
+# result goes to /etc/skel/.local/share/kwalletd/.
+#
+# Why: kwallet-pam keys the wallet with the login password. Without a login
+# password (automatic login), or after the password is changed with passwd
+# (kwallet-pam doesn't follow password changes), apps then get a "KWallet
+# wants to open the wallet" dialog. KWallet first tries an empty password and
+# opens such a wallet without asking, so these dialogs never appear. The
+# secrets in it are then protected by the file permissions (0600) and, where
+# chosen, disk encryption - not by an extra password.
+#
+# The wallet is made by KWallet itself: ksecretd is started the way the
+# kwallet PAM module starts it at a login (--pam-login, the key on a pipe,
+# the environment over a socket), with the key of the empty password
+# (PBKDF2-SHA512 of "" with the salt, 50000 rounds, 56 bytes - the same
+# derivation pam_kwallet and the KWallet backend use), and creates the
+# wallet with that key.
+import hashlib
+import os
+import socket
+import subprocess
+import sys
+import tempfile
+import time
+
+KEYSIZE = SALTSIZE = 56
+ITERATIONS = 50000
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.exit("usage: make-empty-kwallet <dir>")
+    out = os.path.abspath(sys.argv[1])
+    os.makedirs(out, exist_ok=True)
+
+    with tempfile.TemporaryDirectory() as home:
+        data = os.path.join(home, ".local", "share")
+        wdir = os.path.join(data, "kwalletd")
+        os.makedirs(wdir, mode=0o700)
+        kwl = os.path.join(wdir, "kdewallet.kwl")
+        salt = os.urandom(SALTSIZE)
+        with open(os.path.join(wdir, "kdewallet.salt"), "wb") as f:
+            f.write(salt)
+        key = hashlib.pbkdf2_hmac("sha512", b"", salt, ITERATIONS, KEYSIZE)
+
+        r, w = os.pipe()
+        os.write(w, key)
+        os.close(w)
+        sockpath = os.path.join(home, "env.sock")
+        srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        srv.bind(sockpath)
+        srv.listen(1)
+        env = dict(os.environ, PAM_KWALLET5_LOGIN="1", HOME=home, XDG_DATA_HOME=data,
+                   XDG_CONFIG_HOME=os.path.join(home, ".config"),
+                   XDG_RUNTIME_DIR=home, QT_QPA_PLATFORM="offscreen")
+        proc = subprocess.Popen(["/usr/bin/ksecretd", "--pam-login", str(r), str(srv.fileno())],
+                                env=env, pass_fds=(r, srv.fileno()),
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        os.close(r)
+        cli = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        cli.connect(sockpath)
+        cli.sendall(b"LUNAR_MAKE_EMPTY_KWALLET=1\n")
+        cli.close()
+        srv.close()
+
+        for _ in range(150):
+            if os.path.exists(kwl) and os.path.getsize(kwl) > 0:
+                break
+            time.sleep(0.2)
+        time.sleep(0.5)
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+
+        if not (os.path.exists(kwl) and os.path.getsize(kwl) > 0):
+            sys.exit("make-empty-kwallet: ksecretd did not create the wallet")
+        with open(kwl, "rb") as f:
+            head = f.read(20)
+        # magic, version 0.1, Blowfish, PBKDF2-SHA512, no folders
+        if head[:12] != b"KWALLET\n\r\0\r\n" or head[16:20] != b"\0\0\0\0":
+            sys.exit("make-empty-kwallet: unexpected wallet file header")
+        for name, mode in (("kdewallet.kwl", 0o600), ("kdewallet.salt", 0o600)):
+            with open(os.path.join(wdir, name), "rb") as src:
+                blob = src.read()
+            dst = os.path.join(out, name)
+            with open(dst, "wb") as f:
+                f.write(blob)
+            os.chmod(dst, mode)
+    print("make-empty-kwallet: wrote", os.path.join(out, "kdewallet.kwl"))
+
+
+if __name__ == "__main__":
+    main()

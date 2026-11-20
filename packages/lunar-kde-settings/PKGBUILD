@@ -1,19 +1,38 @@
 # Maintainer: Timon <timon2201@gmail.com>
+#
+# KWallet: new accounts get /etc/skel/.local/share/kwalletd/kdewallet, a
+# wallet with an empty password (made at build time by make-empty-kwallet,
+# with KWallet's own ksecretd). KWallet opens it without asking, so there is
+# no "unlock the wallet" dialog with automatic login or after a password
+# change with passwd, which kwallet-pam doesn't follow. The secrets in it are
+# protected by the file permissions and disk encryption, not by a password.
+# Existing accounts keep their wallet (see lunar-kde-settings.install).
 
 pkgname=lunar-kde-settings
-pkgver=1.4.0
-pkgrel=2
-pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar wallpapers also on the lock and login screen, no splash screen, screen timeouts, system tray entries, non-floating panel, Lunar logo on the application launcher, Dolphin view, desktop icons, LibreWolf as the default browser)'
+pkgver=1.5.0
+pkgrel=1
+pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar wallpapers also on the lock and login screen, no splash screen, screen timeouts, system tray entries, non-floating panel, Lunar logo on the application launcher, Dolphin view, desktop icons, LibreWolf as the default browser, KWallet without password prompts)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')
 depends=('plasma-workspace' 'breeze' 'breeze-gtk' 'kde-gtk-config' 'hicolor-icon-theme'
          'attr' 'xdg-user-dirs' 'lunar-wallpapers')
+makedepends=('kwallet' 'python' 'dbus')   # make-empty-kwallet
 optdepends=('librewolf: the default web browser')
+install=lunar-kde-settings.install
+
+build() {
+  rm -rf "$srcdir/kwallet"
+  dbus-run-session -- python3 "$startdir/make-empty-kwallet" "$srcdir/kwallet"
+}
 
 package() {
   cp -a --no-preserve=ownership "$startdir/files/." "$pkgdir/"
   chmod 755 "$pkgdir/usr/lib/lunar/apply-breeze-dark" \
             "$pkgdir/usr/lib/lunar/dolphin-default-views" \
             "$pkgdir/usr/lib/lunar/desktop-icons"
+  # KWallet keeps its folder private; useradd copies these modes to new homes
+  install -dm700 "$pkgdir/etc/skel/.local/share/kwalletd"
+  install -m600 "$srcdir/kwallet/kdewallet.kwl" "$srcdir/kwallet/kdewallet.salt" \
+    "$pkgdir/etc/skel/.local/share/kwalletd/"
 }

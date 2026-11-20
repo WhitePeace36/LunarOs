@@ -1,0 +1,9 @@
+post_upgrade() {
+    # 1.5.0: new accounts start with a KWallet wallet without a password
+    if [ "$(vercmp "$2" 1.5.0)" -lt 0 ]; then
+        echo "==> New accounts now get a KWallet wallet without a password: no unlock"
+        echo "    dialog with automatic login or after changing the password with passwd."
+        echo "    Existing accounts keep theirs. To switch one: open KWallet Manager >"
+        echo "    kdewallet > Change Password, and leave the new password empty."
+    fi
+}
