@@ -9,9 +9,9 @@
 # Existing accounts keep their wallet (see lunar-kde-settings.install).
 
 pkgname=lunar-kde-settings
-pkgver=1.5.0
-pkgrel=2
-pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar wallpapers also on the lock and login screen, no splash screen, screen timeouts, system tray entries, non-floating panel, Lunar logo on the application launcher, Dolphin view, desktop icons, LibreWolf as the default browser, KWallet without password prompts, file indexing off)'
+pkgver=1.5.1
+pkgrel=1
+pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar wallpapers also on the lock and login screen, no splash screen, screen timeouts, system tray entries, non-floating panel, Lunar logo on the application launcher, Dolphin view, desktop icons, LibreWolf as the default browser, KWallet without password prompts, file indexing off, no Shake Cursor effect)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')

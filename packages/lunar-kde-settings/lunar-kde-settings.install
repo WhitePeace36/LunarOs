@@ -1,4 +1,10 @@
 post_upgrade() {
+    # 1.5.1: the Shake Cursor effect is off by default
+    if [ "$(vercmp "$2" 1.5.1)" -lt 0 ]; then
+        echo "==> The mouse pointer no longer grows when it is shaken (KWin's Shake Cursor"
+        echo "    effect is off by default, from the next login). To keep it, turn it on in"
+        echo "    System Settings > Accessibility > Shake Cursor."
+    fi
     # 1.5.0: new accounts start with a KWallet wallet without a password
     if [ "$(vercmp "$2" 1.5.0)" -lt 0 ]; then
         echo "==> New accounts now get a KWallet wallet without a password: no unlock"

@@ -1,0 +1,8 @@
+# Lunar: the "Shake Cursor" effect is off. KWin enlarges the mouse pointer
+# when it is moved quickly back and forth, which also happens by accident
+# (fast mouse movements, games, drawing). To turn it on, enable "Shake
+# Cursor" in System Settings > Accessibility > Shake Cursor (or Window
+# Management > Desktop Effects); that goes to ~/.config/kwinrc and wins over
+# this file.
+[Plugins]
+shakecursorEnabled=false
