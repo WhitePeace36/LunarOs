@@ -96,9 +96,28 @@ alias l='lsd -lFh'
 alias ll='lsd -alFh'
 alias la='lsd -A'
 alias lt='lsd --tree --depth 2'
-alias cat='bat --paging=never --style=plain'
-alias df='duf'
 alias find-text='rg'
+
+# cat shows files with bat's colours and df shows duf's table, but with an
+# option (cat -v, df -h ...) or, for cat, in a pipe, the real program runs:
+# bat and duf don't know most of their options and would only print an error.
+# (unalias: a shell that read the older version, with aliases, can source it again)
+unalias cat df 2>/dev/null
+cat() {
+    local arg
+    [[ -t 1 ]] || { command cat "$@"; return; }
+    for arg in "$@"; do
+        [[ "$arg" == -?* ]] && { command cat "$@"; return; }
+    done
+    bat --paging=never --style=plain "$@"
+}
+df() {
+    local arg
+    for arg in "$@"; do
+        [[ "$arg" == -?* ]] && { command df "$@"; return; }
+    done
+    duf "$@"
+}
 
 # safer defaults and colours
 alias cp='cp -i'
