@@ -52,6 +52,23 @@ in_official_repos() {
     pacman --config "$OFFICIAL_CONF" --dbpath "$SYNC_DB" -Si "$1" >/dev/null 2>&1
 }
 
+# [lunar] comes before Arch's repos in pacman.conf, so pacman installs a
+# package from [lunar] even when Arch's version is newer. An AUR package that
+# moved into Arch's repos (it is skipped below) would stay at its last [lunar]
+# build forever: it is taken out of the repo instead, and publish.sh deletes
+# its files from the servers. Lunar's own packages (packages/<name>) stay.
+remove_moved_packages() {
+    local moved=() n
+    while read -r n; do
+        [[ -n "$n" && ! -d "$LUNAR_ROOT/packages/$n" ]] || continue
+        in_official_repos "$n" && moved+=("$n")
+    done < <(repo_packages)
+    [[ ${#moved[@]} -gt 0 ]] || return 0
+    msg "Removing packages Arch's repositories have by now from the repo: ${moved[*]}"
+    remove_from_repo "${moved[@]}"
+}
+remove_moved_packages
+
 # a dependency (name, or something a package provides) can come from Arch's repos
 official_satisfies() {
     pacman --config "$OFFICIAL_CONF" --dbpath "$SYNC_DB" --noconfirm \

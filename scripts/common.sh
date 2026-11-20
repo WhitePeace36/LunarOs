@@ -120,17 +120,30 @@ new_packages() {  # <dir> <stamp>
 # entries and files. scripts/publish.sh then deletes them from the release.
 remove_debug_packages() {
     [[ -f "$DB_FILE" ]] || return 0
-    local names=() n
+    local names=()
     mapfile -t names < <(bsdtar -tf "$DB_FILE" \
         | sed -nE 's|^(.+-debug)-[^-/]+-[^-/]+/desc$|\1|p' | sort -u)
     [[ ${#names[@]} -gt 0 ]] || return 0
     msg "Removing debug packages from the repo: ${names[*]}"
+    remove_from_repo "${names[@]}"
+}
+
+# Names of all packages in the local repo database, one per line
+repo_packages() {
+    [[ -f "$DB_FILE" ]] || return 0
+    bsdtar -tf "$DB_FILE" | sed -nE 's|^(.+)-[^-/]+-[^-/]+/desc$|\1|p' | sort -u
+}
+
+# Take packages out of the local repo: database entries and files.
+# scripts/publish.sh then deletes the files from the servers.
+remove_from_repo() {  # <name>...
+    local n
     if [[ -n "$LUNAR_SIGNING_KEY" ]]; then
-        repo-remove --sign --key "$LUNAR_SIGNING_KEY" "$DB_FILE" "${names[@]}"
+        repo-remove --sign --key "$LUNAR_SIGNING_KEY" "$DB_FILE" "$@"
     else
-        repo-remove "$DB_FILE" "${names[@]}"
+        repo-remove "$DB_FILE" "$@"
     fi
-    for n in "${names[@]}"; do
+    for n in "$@"; do
         rm -f "$REPO_DIR/$n"-[0-9]*.pkg.tar.zst "$REPO_DIR/$n"-[0-9]*.pkg.tar.zst.sig
     done
 }
