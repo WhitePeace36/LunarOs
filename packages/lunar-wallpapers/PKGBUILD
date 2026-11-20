@@ -7,7 +7,7 @@
 # /usr/share/wallpapers/lunar-<name>, where <name> is the file name without
 # the number and without "busy-" or "lunar-" (20-wordmark-lockup.png ->
 # lunar-wordmark-lockup). lunar-kde-settings uses lunar-wordmark-lockup (20)
-# as the desktop wallpaper and lunar-moonlit-lake (26) on the lock screen.
+# on the desktop, the lock screen and the login screen.
 
 pkgname=lunar-wallpapers
 pkgver=1.0.0

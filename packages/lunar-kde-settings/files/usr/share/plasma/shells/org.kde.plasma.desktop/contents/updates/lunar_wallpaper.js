@@ -6,7 +6,9 @@
 // layout. Only desktops that still show Plasma's default wallpaper are
 // changed, so a wallpaper the user picked is kept, and the user can pick
 // another one afterwards as usual (right click on the desktop > Desktop and
-// Wallpaper). The lock screen's wallpaper is set in /etc/xdg/kscreenlockerrc.
+// Wallpaper). The lock screen shows the same wallpaper (set in
+// /etc/xdg/kscreenlockerrc), and so does the login screen
+// (/usr/lib/plasmalogin/plasmalogin.conf.d/50-lunar.conf).
 
 const lunarWallpaper = "file:///usr/share/wallpapers/lunar-wordmark-lockup/";
 // unset (Plasma's default) or Plasma's default written out
