@@ -1,5 +1,6 @@
-# Lunar boot splash: the bgrt theme of the plymouth package (firmware logo,
-# spinner) with Lunar's watermark instead of Arch's. Its other images are copies
+# Lunar boot splash: plymouth's two-step module with the middle of Lunar's
+# wallpaper (watermark.png, made by make-splash.py) on the wallpaper's night
+# blue, and the spinner below; no firmware logo. Its other images are copies
 # of the spinner theme's (see the PKGBUILD).
 [Plymouth Theme]
 Name=Lunar
