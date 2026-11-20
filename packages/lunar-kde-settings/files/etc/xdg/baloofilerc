@@ -1,0 +1,9 @@
+# Lunar: file indexing (Baloo) is off. Indexing everything in the home folder
+# costs a lot of memory, disk and CPU time (game folders, source trees,
+# builds); on an 8 GB test machine the content indexer grew to over 9 GB.
+# Dolphin's search still works without it (it searches the folder directly,
+# which is slower); KRunner and the launcher just don't list files.
+# To turn indexing on, enable "File Search" in System Settings > Search >
+# File Search; that goes to ~/.config/baloofilerc and wins over this file.
+[Basic Settings]
+Indexing-Enabled=false
