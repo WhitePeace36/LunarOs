@@ -69,8 +69,10 @@ scripts/build-iso.sh         # ISO in iso/out/
   need are built first automatically; packages that would need Electron from
   the AUR (a source build of many hours) are refused. PGP keys a PKGBUILD
   lists in `validpgpkeys` are imported into your gpg keyring. Packages Arch's
-  repositories carry by now are skipped. Split packages are listed by their
-  package base.
+  repositories carry by now are skipped, and their old builds are taken out
+  of the local repository (`[lunar]` comes first in pacman.conf, so an old
+  copy there would win over Arch's newer one; `publish.sh` then deletes the
+  files). Split packages are listed by their package base.
 - `build-packages.sh` builds everything in `build-order.txt` (or the
   packages given as arguments) whose version isn't in the repository yet,
   signs it and adds it to `repo/x86_64`. The kernel takes 30 to 90 minutes.
@@ -106,7 +108,7 @@ the next time `build-aur.sh` or `build-packages.sh` runs. Run
 
 | Component | Change | Then |
 |---|---|---|
-| Kernels (`linux-lunar`, `linux-lunar-v3`) | `_version` in `packages/linux-lunar/lunar-distro.cfg`, `_commit` in its `prepare.sh` (both builds use them; `packages/linux-lunar-v3/lunar-distro.cfg` only holds the compiler, LTO and `-march` overrides) | `scripts/build-packages.sh linux-lunar linux-lunar-v3` |
+| Kernels (`linux-lunar`, `linux-lunar-v3`) | `_version` in `packages/linux-lunar/lunar-distro.cfg` and in `packages/linux-lunar-v3/lunar-distro.cfg` (the same release in both: `prepare.sh` stops when they differ), `_commit` in `packages/linux-lunar/prepare.sh` (used by both builds) | `scripts/build-packages.sh linux-lunar linux-lunar-v3` |
 | Elara, AnanicyConfigurator, PipewireConfigurator, Sysmon, ananicy-cpp, ananicy rules | release the version in the project's repo (tag `vX.Y.Z`, push the tag), then `pkgver=X.Y.Z` and `pkgrel=1` in the package's PKGBUILD | `scripts/build-packages.sh <name>` |
 | Settings | the files and `pkgver` in [lunar-settings](https://github.com/WhitePeace36/lunar-settings), tag `v<pkgver>` and push it, then `_tag` in `packages/lunar-settings/prepare.sh` | `scripts/build-packages.sh lunar-settings` |
 | Calamares | `pkgver` and `_commit` (a release tag) in `packages/lunar-calamares/PKGBUILD`; compare upstream's module configs with `config/modules` | `scripts/build-packages.sh lunar-calamares` |

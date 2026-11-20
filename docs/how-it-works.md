@@ -16,10 +16,10 @@ over packages with the same name in Arch's repositories.
 | `lunar-kde-settings` | Breeze Dark everywhere (Plasma, GTK, first login); the Lunar logo instead of the KDE logo on the application launcher (a Plasma update script, run once per user, that leaves an icon the user picked alone); panels that don't float (update script, once per user); the Lunar wallpaper 20 on the desktop (update script, once per user, only where Plasma's default wallpaper is set) and 26 on the lock screen (`/etc/xdg/kscreenlockerrc`) and the login screen (`/usr/lib/plasmalogin/plasmalogin.conf.d/50-lunar.conf`); no splash screen after login (`/etc/xdg/ksplashrc`, and once per user after Breeze Dark is applied, which sets its own); screen dims after 5 minutes, turns off after 7, after 5 when locked (`/etc/xdg/powerdevilrc`); system tray: Weather Report and Keyboard Layout disabled, Clipboard always shown, Notifications only in the tray's popup (update script, once per user); Ananicy Configurator, Pipewire Configurator and ProtonUp-Qt on the desktop (links made at login, once per application and user, as soon as the application is installed); LibreWolf as the default browser (`BrowserApplication` in `/etc/xdg/kdeglobals`, `/etc/xdg/mimeapps.list` for links and HTML files) |
 | `lunar-browser-settings` | Brave and LibreWolf defaults: DNS over HTTPS (Quad9), HTTPS only, no password or payment saving, DuckDuckGo, fingerprinting protection / resistFingerprinting off, dark websites in LibreWolf, bookmarks bar always shown with one bookmark, Youtube (`/usr/share/lunar-browser-settings/bookmarks.html`; new profiles only, existing ones keep their bookmarks). Brave: policies in `/etc/brave/policies` (`managed/` enforced: DoH, HTTPS, fingerprinting; `recommended/` changeable defaults), see `brave://policy`; `/opt/brave-bin/initial_preferences` imports the bookmarks on the first start. LibreWolf: `librewolf.overrides.cfg` in `/etc/skel` for new users; `/etc/librewolf/policies/policies.json`, which LibreWolf reads *instead of* its own policies, is written by a pacman hook (`/usr/lib/lunar/librewolf-policies`) from LibreWolf's policies plus Lunar's (`librewolf-policies.json`) and never overwrites a file Lunar didn't write |
 | `lunar-wallpapers` | The wallpapers in `branding/` as Plasma wallpaper packages in `/usr/share/wallpapers/lunar-*` (`prepare.sh` copies them into the build folder) |
-| `lunar-zsh-config` | zsh prompt, completion menu, `lsd`/`bat` aliases |
+| `lunar-zsh-config` | zsh prompt, completion menu, `lsd` aliases, `cat`/`df` as `bat`/`duf` (the real programs when options are given, and `cat` in pipes) |
 | `ananicy-cpp-lunar` | Build of the [ananicy-cpp fork](https://github.com/WhitePeace36/ananicy-cpp-lunar) (replaces Arch's `ananicy-cpp`) |
-| `lunar-ananicy-rules` | ananicy-cpp rules from [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules) |
-| `elara` | [Elara](https://github.com/WhitePeace36/Elara) scheduler, enabled by default; conflicts with `scx-manager` |
+| `lunar-ananicy-rules` | ananicy-cpp rules from [ananicy-rules](https://github.com/WhitePeace36/ananicy-rules), in `/usr/share/ananicy.d`; rules and types in `/etc/ananicy.d` (where AnanicyConfigurator saves) replace the packaged ones of the same name |
+| `elara` | [Elara](https://github.com/WhitePeace36/Elara) scheduler, enabled by default. Only one sched_ext scheduler can run, so installing it disables `scx.service` and `scx_loader.service` (removing it enables them again); replaces `scx-elara` |
 | `pipewire-configurator` | [PipewireConfigurator](https://github.com/WhitePeace36/PipewireConfigurator) |
 | `ananicy-configurator` | [AnanicyConfigurator](https://github.com/WhitePeace36/AnanicyConfigurator) |
 | `sysmon` | [Sysmon](https://github.com/WhitePeace36/Sysmon), the system monitor (installed instead of KDE's `plasma-systemmonitor`); Lunar's package gives it the global shortcut Ctrl+Shift+Esc |
@@ -44,7 +44,10 @@ Lunar builds that kernel twice, from the same commit and `_version`:
 
 `packages/linux-lunar-v3/prepare.sh` runs linux-lunar's `prepare.sh` with
 `packages/linux-lunar-v3/lunar-distro.cfg` as a second file, appended after
-linux-lunar's, which only sets the package suffix, compiler, LTO and `-march`.
+linux-lunar's, which sets the package suffix, compiler, LTO and `-march`. It
+also repeats `_version` (and the no-user-patches settings); `prepare.sh`
+stops when its `_version` differs from linux-lunar's, so a bump has to change
+both files.
 The kernel releases differ (`7.x.y-N-lunar`, `7.x.y-N-lunar-v3`), so both
 packages can be installed at the same time.
 
@@ -137,7 +140,10 @@ entry), and `linux-lts`, ranks Arch mirrors with
 reflector, uses zsh for new users, masks rtkit, enables ufw (incoming blocked
 except LocalSend, 53317 tcp/udp), sets `deny = 10` in
 `/etc/security/faillock.conf` (lockout after 10 wrong passwords instead of 3),
-and installs Flatseal from Flathub.
+and installs Flatseal from Flathub. "Log in automatically" on the user page
+is written by Calamares' `displaymanager` module into `/etc/plasmalogin.conf`
+(`[Autologin]` `User=` and `Session=plasma`, the Wayland session), the same
+file System Settings > Login Screen changes later.
 Filesystems: Btrfs (default, with subvolumes), ext4, XFS, F2FS; optional LUKS2
 encryption. There is no swap partition or swap file: Lunar swaps to zram only.
 The initramfs uses mkinitcpio's systemd-based hooks (`systemd`, `sd-vconsole`,

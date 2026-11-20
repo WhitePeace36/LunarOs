@@ -32,8 +32,10 @@ change. Its own packages, and the few AUR packages it ships, come from the
   Ctrl+Shift+Esc
 - Wi-Fi, Bluetooth and printer/scanner discovery on the network (mDNS) work
   out of the box
-- zsh with the prompt `user@host:path(branch⚡) »`, `lsd`/`bat` aliases
-  (`ll`, `la`, `lt`, ...), `micro` as editor and `most` as pager
+- zsh with the prompt `user@host:path(branch⚡) »`, `lsd` aliases (`ll`,
+  `la`, `lt`, ...), `cat` with `bat`'s colours and `df` with `duf`'s table
+  (with options such as `df -h` the real programs run), `micro` as editor and
+  `most` as pager
 
 **Performance**
 - [linux-lunar](https://github.com/WhitePeace36/linux-lunar) as the default
@@ -100,7 +102,8 @@ the sound chip stay powered.
 2. Boot from it in UEFI mode. The live session starts KDE Plasma by itself.
 3. Connect to the internet, then start **Install Lunar** from the desktop.
 4. The installer asks for language, keyboard, disk, graphics driver,
-   additional software and the user account.
+   additional software and the user account (optionally logged in
+   automatically at boot).
 
 ## After installation
 
