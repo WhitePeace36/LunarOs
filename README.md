@@ -123,6 +123,71 @@ Files in `/etc` always take precedence over Lunar's defaults in `/usr/lib`,
 and updates never change them. Boot entries are written automatically
 whenever a kernel is installed, updated or removed.
 
+## Repairing an installed system (lunar-chroot)
+
+If the installed system doesn't boot any more (a broken update, a missing
+initramfs, a damaged boot loader, a forgotten password), boot the Lunar ISO
+and open a terminal. `lunar-chroot` finds the installed systems on the
+computer, mounts the one you pick with everything in its `/etc/fstab`
+(`/home`, the EFI partition at `/boot`, Btrfs subvolumes, ...) and opens a
+root shell inside it with `arch-chroot`. Commands typed there run on the
+installed system, not on the live system.
+
+```sh
+lunar-chroot              # find systems, ask which one, open a shell in it
+```
+
+Inside the shell, the usual repairs:
+
+| Problem | Fix |
+|---|---|
+| An update was interrupted or broke something | `pacman -Syu` |
+| The initramfs is missing or broken | `mkinitcpio -P` |
+| Boot entries are missing or wrong | `lunar-update-cmdline` (rewrites the kernel parameters and the systemd-boot entries) |
+| The boot loader itself is damaged | `bootctl install` |
+| Forgot a password | `passwd <user>` |
+| Wrong graphics driver | `lunar-gpu-setup` |
+
+Type `exit` or press Ctrl+D to leave. `lunar-chroot` then unmounts
+everything and locks the encrypted partitions again.
+
+What it handles:
+
+- **File systems:** ext4 (and ext2/3), XFS, Btrfs with any subvolume layout
+  (also a RAID with a missing disk, mounted degraded) and F2FS, on plain
+  partitions, LUKS, LVM and mdadm RAID. ZFS and bcachefs aren't supported.
+- **Encryption:** it asks before unlocking each LUKS partition and uses the
+  same names as the installed system (`luks-<UUID>`), so its fstab works.
+  Further disks listed in the system's `/etc/crypttab` are unlocked with
+  their key files where possible.
+- **EFI partition:** mounted from fstab, or found by its partition type when
+  it isn't listed there.
+- **Safety:** while searching, partitions are mounted read-only without
+  replaying journals. The USB stick the live system runs from and partitions
+  the live system has mounted are skipped. Paths from the disk (fstab
+  entries, symlinks) can't lead outside the mount folder. If a swap
+  partition holds a hibernated system, it warns and asks first. Network and
+  FUSE mounts are skipped. Btrfs snapshots and container images (Docker,
+  Podman, ...) aren't offered as systems.
+
+Options (`lunar-chroot --help` shows them too):
+
+| Command | What it does |
+|---|---|
+| `lunar-chroot` | Find systems, ask which one if there are several, open a shell |
+| `lunar-chroot /dev/nvme0n1p2` | Use this partition (or a LUKS or LVM device) |
+| `lunar-chroot -- mkinitcpio -P` | Run one command instead of opening a shell |
+| `lunar-chroot --list` | Only show the systems found |
+| `lunar-chroot --subvol @` | Btrfs: use this subvolume as `/` (default: the one with the system on it, usually `@`) |
+| `lunar-chroot --snapshots` | Also offer Btrfs snapshots (snapper, timeshift) |
+| `lunar-chroot --mount /mnt/x` | Mount the system there (default `/mnt/lunar`) |
+| `lunar-chroot --keep` | Leave everything mounted and unlocked after the shell exits; running `lunar-chroot` again goes straight back in |
+| `lunar-chroot --umount` | Unmount and lock what `--keep` left behind |
+
+It needs root and restarts itself with `sudo`; in the live session that
+doesn't ask for a password. It is part of the ISO only
+(`iso/airootfs/usr/local/bin/lunar-chroot`), not of installed systems.
+
 ## Related repositories
 
 | Repository | What it is |
