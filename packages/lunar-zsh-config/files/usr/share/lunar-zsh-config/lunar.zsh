@@ -1,6 +1,6 @@
 # Lunar zsh configuration - sourced from ~/.zshrc
 # Prompt:   user@host:path(branch○) »   (the colours of oh-my-zsh's dpoggi
-#           theme, with the user name in Lunar blue)
+#           theme: green user, cyan host, magenta path, red »)
 # Overrides go into ~/.zshrc after the "source" line.
 
 # ---------------------------------------------------------------- history
@@ -68,15 +68,8 @@ autoload -Uz add-zsh-hook
 _lunar_precmd() { vcs_info }
 add-zsh-hook precmd _lunar_precmd
 
-# User name in Lunar blue (#2f80ed, the blue of the logo) where the terminal
-# has true colour, else the nearest of the 256 colours. root: red name and "#".
-if [[ "$COLORTERM" == (truecolor|24bit) ]]; then
-    _lunar_blue='#2f80ed'
-else
-    _lunar_blue='33'
-fi
-PROMPT='%(!.%F{red}.%F{'"$_lunar_blue"'})%n%f@%F{cyan}%m%f:%F{magenta}%~${vcs_info_msg_0_} %F{red}%(!.#.»)%f '
-unset _lunar_blue
+# green user name, cyan host, magenta path, red »; root: red name and "#"
+PROMPT='%(!.%F{red}.%F{green})%n%f@%F{cyan}%m%f:%F{magenta}%~${vcs_info_msg_0_} %F{red}%(!.#.»)%f '
 PROMPT2='%F{red}\ %f'
 RPROMPT='%(?..%F{red}%? ↵%f)'
 
