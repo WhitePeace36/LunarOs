@@ -6,3 +6,11 @@
 # this file.
 [Plugins]
 shakecursorEnabled=false
+
+# Lunar: the on-screen keyboard (package plasma-keyboard). KWin only runs an
+# input method that is selected here; without it the "Show On-Screen
+# Keyboard" button of the lock screen does nothing. It only pops up on its
+# own for touch input; System Settings > Keyboard > Virtual Keyboard changes
+# or turns it off (that goes to ~/.config/kwinrc and wins over this file).
+[Wayland]
+InputMethod=/usr/share/applications/org.kde.plasma.keyboard.desktop
