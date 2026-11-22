@@ -11,8 +11,8 @@
 # PKGBUILD only, raise pkgrel.
 
 pkgname=elara
-pkgver=1.1.0
-pkgrel=2
+pkgver=1.1.1
+pkgrel=1
 pkgdesc='sched_ext CPU scheduler, tuned by nice values, for stable frame times'
 arch=('x86_64')
 url='https://github.com/WhitePeace36/Elara'
