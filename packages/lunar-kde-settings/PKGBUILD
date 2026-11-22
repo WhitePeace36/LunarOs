@@ -9,14 +9,15 @@
 # Existing accounts keep their wallet (see lunar-kde-settings.install).
 
 pkgname=lunar-kde-settings
-pkgver=1.5.3
+pkgver=1.5.4
 pkgrel=1
 pkgdesc='Lunar - KDE Plasma defaults (Breeze Dark, Lunar wallpapers also on the lock and login screen, no splash screen, screen timeouts, system tray entries, non-floating panel, Lunar logo on the application launcher, Dolphin view, desktop icons, LibreWolf as the default browser, KWallet without password prompts, file indexing off, no Shake Cursor effect)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')
 depends=('plasma-workspace' 'breeze' 'breeze-gtk' 'kde-gtk-config' 'hicolor-icon-theme'
-         'attr' 'xdg-user-dirs' 'lunar-wallpapers')
+         'attr' 'xdg-user-dirs' 'lunar-wallpapers'
+         'plasma-keyboard')  # on-screen keyboard of the login and lock screen
 makedepends=('kwallet' 'python' 'dbus')   # make-empty-kwallet
 optdepends=('librewolf: the default web browser')
 install=lunar-kde-settings.install

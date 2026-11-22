@@ -111,6 +111,7 @@ alsa-utils
 # --- KDE Plasma live session ---
 plasma-desktop
 plasma-login-manager
+plasma-keyboard
 plasma-nm
 plasma-pa
 powerdevil

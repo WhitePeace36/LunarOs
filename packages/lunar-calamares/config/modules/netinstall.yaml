@@ -14,6 +14,9 @@
   packages:
     - plasma-desktop
     - plasma-login-manager
+    # on-screen keyboard: the login screen starts KWin with
+    # --inputmethod plasma-keyboard, and the lock screen has a button for it
+    - plasma-keyboard
     - plasma-nm
     - plasma-pa
     - plasma-firewall
