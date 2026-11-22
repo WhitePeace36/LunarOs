@@ -8,8 +8,9 @@
 [General]
 GlobalViewProps=false
 
-# IconSize is the zoom without previews, PreviewSize the one with previews
+# IconSize is the zoom without previews, PreviewSize the one with previews.
+# 22 is the second zoom step (Dolphin's steps: 16, 22, 32, 48, 64, 80, ...).
 [DetailsMode]
 ExpandableFolders=true
-IconSize=16
-PreviewSize=16
+IconSize=22
+PreviewSize=22
