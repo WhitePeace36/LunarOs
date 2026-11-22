@@ -15,9 +15,13 @@
 #
 # Each server gets the new or changed package files first and the database
 # after them, so a client never sees a database that lists packages the
-# server doesn't have yet. Then files that are no longer in the repository
-# (old package versions) are deleted. The repo database symlinks (lunar.db,
-# lunar.files) are uploaded as real files, since neither server has symlinks.
+# server doesn't have yet. Then old package versions are deleted, except the
+# previous version of each package: an install or update that downloaded
+# the database before this upload still asks for that one, and it would fail
+# if the file were gone. Example: the server has 1.3 and 1.4.2, 1.4.3 is
+# published: 1.4.2 stays, 1.3 is deleted. Packages taken out of the repo are
+# deleted completely. The repo database symlinks (lunar.db, lunar.files) are
+# uploaded as real files, since neither server has symlinks.
 # A server that fails doesn't stop the others; the script then exits with 1.
 
 . "$(dirname "$0")/common.sh"
@@ -25,13 +29,14 @@
 filters=()
 for arg in "$@"; do
     case "$arg" in
-        -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*) die "unknown option $arg" ;;
         *) filters+=("$arg") ;;
     esac
 done
 
 [[ -f "$DB_FILE" ]] || die "no repo database at $DB_FILE - build packages first"
+need pacman vercmp
 
 targets=()
 while read -r url; do
@@ -59,6 +64,46 @@ is_db() {
 }
 
 in_current() { [[ " ${current[*]} " == *" $1 "* ]]; }
+
+# Splits a package file name (<name>-<pkgver>-<pkgrel>-<arch>.pkg.tar.zst)
+# into pkg_name and pkg_ver (<pkgver>-<pkgrel>). Fails for other files.
+pkg_split() {
+    [[ "$1" =~ ^(.+)-([^-]+-[^-]+)-[^-]+\.pkg\.tar\.zst$ ]] || return 1
+    pkg_name="${BASH_REMATCH[1]}"
+    pkg_ver="${BASH_REMATCH[2]}"
+}
+
+# Fills keep_prev with the previous version of every package that is still
+# in the repo: of the files on the server (the arguments) that are older than
+# the current version, the newest one, and its signature.
+declare -A keep_prev=()
+select_previous() {  # <file on the server>...
+    local f name
+    local -A cur_ver=() prev_ver=() prev_file=()
+    for f in "${current[@]}"; do
+        pkg_split "$f" || continue
+        cur_ver[$pkg_name]="$pkg_ver"
+    done
+    for f in "$@"; do
+        in_current "$f" && continue
+        pkg_split "$f" || continue
+        [[ -n "${cur_ver[$pkg_name]:-}" ]] || continue    # taken out of the repo
+        [[ "$(vercmp "$pkg_ver" "${cur_ver[$pkg_name]}")" -lt 0 ]] || continue
+        if [[ -z "${prev_ver[$pkg_name]:-}" ]] \
+                || [[ "$(vercmp "$pkg_ver" "${prev_ver[$pkg_name]}")" -gt 0 ]]; then
+            prev_ver[$pkg_name]="$pkg_ver"
+            prev_file[$pkg_name]="$f"
+        fi
+    done
+    keep_prev=()
+    for name in "${!prev_file[@]}"; do
+        keep_prev[${prev_file[$name]}]=1
+        keep_prev[${prev_file[$name]}.sig]=1
+    done
+}
+
+# The file stays on the server: it's in the repo, or it's a previous version
+keep_file() { in_current "$1" || [[ -n "${keep_prev[$1]:-}" ]]; }
 
 # Filled by each server before select_uploads: size and (where the server
 # reports one) sha256 of every file it has.
@@ -123,8 +168,9 @@ publish_github() {
     fi
     (cd "$stage" && gh release upload "$tag" -R "$gh_repo" --clobber "${db_uploads[@]}")
 
+    select_previous "${published[@]}"
     for asset in "${published[@]}"; do
-        in_current "$asset" && continue
+        keep_file "$asset" && continue
         msg2 "deleting old asset $asset"
         gh release delete-asset "$tag" "$asset" -R "$gh_repo" -y
     done
@@ -201,13 +247,15 @@ publish_gitlab() {
         gl --upload-file "$stage/$f" "$gl_api/projects/$gl_project/packages/generic/$gl_pkg/$gl_ver/$f" >/dev/null
     done
 
-    # delete files that are no longer in the repo, and the older copies of
-    # files that were uploaded again
+    # delete old package versions (except the previous one of each package),
+    # and the older copies of files that were uploaded again
     gitlab_files
     local -A newest=()
-    while IFS=$'\t' read -r id name _; do newest[$name]="$id"; done < "$gl_listing"
+    local names=()
+    while IFS=$'\t' read -r id name _; do newest[$name]="$id"; names+=("$name"); done < "$gl_listing"
+    select_previous "${names[@]}"
     while IFS=$'\t' read -r id name _; do
-        if ! in_current "$name"; then
+        if ! keep_file "$name"; then
             msg2 "deleting old file $name"
         elif [[ "${newest[$name]}" == "$id" ]]; then
             continue
