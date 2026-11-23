@@ -14,7 +14,7 @@
 # PKGBUILD only, raise pkgrel.
 
 pkgname=lunar-ananicy-rules
-pkgver=1.0.1
+pkgver=1.1.0
 pkgrel=1
 pkgdesc='Lunar - ananicy-cpp rules tuned for the Elara scheduler'
 arch=('any')
