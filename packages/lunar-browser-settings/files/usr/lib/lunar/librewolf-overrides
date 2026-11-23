@@ -1,0 +1,51 @@
+#!/bin/sh
+# Lunar's LibreWolf defaults (librewolf.overrides.cfg) for accounts that don't
+# have the current version, once per user and Lunar version, at login:
+#
+#  - no file yet: copy it from /etc/skel. /etc/skel only reaches accounts
+#    created after lunar-browser-settings was installed, and the installer
+#    creates the account first and installs the browsers afterwards.
+#  - an unchanged copy of an older Lunar version (same checksum): replace it,
+#    so new defaults reach existing accounts.
+#  - a file the user changed: left alone.
+#
+# LibreWolf reads the file from $XDG_CONFIG_HOME/librewolf/librewolf/, or from
+# ~/.librewolf/ for profiles that still live there (its prefcalls.js).
+#
+# When the file changes: bump $version and add the sha256 of the previous
+# version to $older.
+
+version=1.2.0
+older="
+03fddd3f078e027493905db6a5702df1e0dea16a55d44c036d7e7b4eaa83fbb7
+35ad797c47473166754f27ee7a598b76d7cdee015770d83c0c57266ec01ad935
+"
+
+marker="${XDG_STATE_HOME:-$HOME/.local/state}/lunar/librewolf-overrides-$version"
+[ -e "$marker" ] && exit 0
+
+skel=/etc/skel/.config/librewolf/librewolf/librewolf.overrides.cfg
+[ -f "$skel" ] || exit 0
+
+xdg="${XDG_CONFIG_HOME:-$HOME/.config}/librewolf"
+if [ -d "$HOME/.librewolf" ] && [ ! -d "$xdg" ]; then
+    file="$HOME/.librewolf/librewolf.overrides.cfg"
+else
+    file="$xdg/librewolf/librewolf.overrides.cfg"
+fi
+
+install_it=no
+if [ ! -e "$file" ]; then
+    install_it=yes
+else
+    sum="$(sha256sum < "$file" | cut -d' ' -f1)"
+    for h in $older; do
+        [ "$sum" = "$h" ] && install_it=yes
+    done
+fi
+
+if [ "$install_it" = yes ]; then
+    mkdir -p "${file%/*}" && cp "$skel" "$file.lunar-new" && mv "$file.lunar-new" "$file"
+fi
+
+mkdir -p "${marker%/*}" && touch "$marker"

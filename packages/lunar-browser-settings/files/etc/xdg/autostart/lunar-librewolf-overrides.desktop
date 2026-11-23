@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Lunar: LibreWolf defaults
+Exec=/usr/lib/lunar/librewolf-overrides
+NoDisplay=true
+X-KDE-autostart-phase=1

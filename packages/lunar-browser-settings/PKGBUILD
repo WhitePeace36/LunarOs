@@ -20,11 +20,20 @@
 #   Dark mode: no policy; Brave follows the system theme (Breeze Dark on Lunar).
 #   uBlock Origin: Brave only offers it at brave://settings/extensions/v2 (served
 #   by Brave since the Chrome Web Store dropped it); Shields block ads by default.
+#   It can't be preinstalled: Brave's build (jcokkipkhhgiakinbnnplhkdbjbgcgpe)
+#   comes from go-updater.brave.com, which only answers Brave's own installer
+#   (403 "Missing auth header" for ExtensionSettings/ExtensionInstallForcelist),
+#   and the Chrome Web Store no longer serves the MV2 build (cjpal...).
 #
 # LibreWolf
 #   /etc/skel/.config/librewolf/librewolf/librewolf.overrides.cfg (read after
 #   LibreWolf's librewolf.cfg; new users get it): DNS over HTTPS "increased
-#   protection" (Quad9), resistFingerprinting off, dark websites.
+#   protection" with the provider "Quad9 (No Filtering)",
+#   resistFingerprinting off, history/cookies kept when LibreWolf closes, dark
+#   websites. /usr/lib/lunar/librewolf-overrides (/etc/xdg/autostart, once per
+#   user and version) copies it into accounts that don't have it (the installer
+#   creates the account before it installs the browsers) or still have an
+#   unchanged older Lunar version; files the user changed stay.
 #   /etc/librewolf/policies/policies.json, written by /usr/lib/lunar/librewolf-policies
 #   (pacman hook) from LibreWolf's own policies plus librewolf-policies.json:
 #   bookmarks toolbar shown, new profiles start with bookmarks.html (Youtube).
@@ -32,9 +41,9 @@
 #   no password saving, no payment autofill and no default bookmarks.
 
 pkgname=lunar-browser-settings
-pkgver=1.1.0
+pkgver=1.2.0
 pkgrel=1
-pkgdesc='Lunar - Brave and LibreWolf defaults (DNS over HTTPS, HTTPS only, no password/payment saving, DuckDuckGo, fingerprinting protection off, bookmarks bar with Youtube)'
+pkgdesc='Lunar - Brave and LibreWolf defaults (DNS over HTTPS, HTTPS only, no password/payment saving, DuckDuckGo, fingerprinting protection off, LibreWolf keeps cookies when closed, bookmarks bar with Youtube)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')
@@ -54,9 +63,12 @@ package() {
            opt/brave-bin/initial_preferences \
            usr/share/lunar-browser-settings/bookmarks.html \
            usr/share/lunar-browser-settings/librewolf-policies.json \
-           usr/share/libalpm/hooks/lunar-librewolf-policies.hook; do
+           usr/share/libalpm/hooks/lunar-librewolf-policies.hook \
+           etc/xdg/autostart/lunar-librewolf-overrides.desktop; do
     install -Dm644 "$startdir/files/$f" "$pkgdir/$f"
   done
   install -Dm755 "$startdir/files/usr/lib/lunar/librewolf-policies" \
     "$pkgdir/usr/lib/lunar/librewolf-policies"
+  install -Dm755 "$startdir/files/usr/lib/lunar/librewolf-overrides" \
+    "$pkgdir/usr/lib/lunar/librewolf-overrides"
 }
