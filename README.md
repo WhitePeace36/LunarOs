@@ -100,7 +100,7 @@ the sound chip stay powered.
 1. Write the ISO to a USB stick (balenaEtcher, Ventoy, or
    `dd if=lunar-*.iso of=/dev/sdX bs=4M status=progress`).
 2. Boot from it in UEFI mode. The live session starts KDE Plasma by itself.
-3. Connect to the internet, then start **Install Lunar** from the desktop.
+3. Connect to the internet, then start **Install LunarOs** from the desktop.
 4. The installer asks for language, keyboard, disk, graphics driver,
    additional software and the user account (optionally logged in
    automatically at boot).

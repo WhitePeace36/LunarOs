@@ -4,7 +4,7 @@
 
 err() {
     if command -v kdialog >/dev/null; then
-        kdialog --title "Install Lunar" --error "$1"
+        kdialog --title "Install LunarOs" --error "$1"
     else
         echo "lunar-install: $1" >&2
     fi

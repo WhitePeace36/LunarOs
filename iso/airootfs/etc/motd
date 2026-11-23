@@ -1,7 +1,7 @@
 
-  [38;2;124;196;255mLunar[0m live system
+  [38;2;124;196;255mLunarOs[0m live system
 
-  Install from the desktop with "Install Lunar", or run: lunar-install
+  Install from the desktop with "Install LunarOs", or run: lunar-install
   Wi-Fi: use the network icon in the panel (or nmtui on the console).
   Repair an installed system (boot loader, initramfs, updates): lunar-chroot
 
