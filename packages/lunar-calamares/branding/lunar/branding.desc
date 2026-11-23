@@ -13,11 +13,11 @@ sidebar: widget
 navigation: widget
 
 strings:
-    productName:         "Lunar"
+    productName:         "LunarOs"
     shortProductName:    "Lunar"
     version:             "rolling"
     shortVersion:        "rolling"
-    versionedName:       "Lunar"
+    versionedName:       "LunarOs"
     shortVersionedName:  "Lunar"
     bootloaderEntryName: "Lunar"
     productUrl:          "https://github.com/WhitePeace36/LunarOs"
