@@ -1,8 +1,8 @@
 # Maintainer: Timon <timon2201@gmail.com>
 
 pkgname=lunar-hooks
-pkgver=1.0.0
-pkgrel=3
+pkgver=1.0.1
+pkgrel=1
 pkgdesc='Lunar - pacman hooks (branding, reboot notice)'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'

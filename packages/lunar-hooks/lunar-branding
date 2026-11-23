@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Writes Lunar's identity into the files that base packages overwrite on
 # upgrade (/etc/os-release from filesystem, /etc/lsb-release from lsb-release).
+# Names: ID lunar (machine-readable), NAME Lunar (short), PRETTY_NAME and
+# DISTRIB_DESCRIPTION LunarOs (full).
 
 update_lsb_release() {
     [ -f /etc/lsb-release ] || return 0
     sed -i /etc/lsb-release \
         -e 's|^DISTRIB_ID=.*$|DISTRIB_ID=lunar|' \
-        -e 's|^DISTRIB_DESCRIPTION=.*$|DISTRIB_DESCRIPTION=\"Lunar\"|'
+        -e 's|^DISTRIB_DESCRIPTION=.*$|DISTRIB_DESCRIPTION=\"LunarOs\"|'
 }
 
 update_os_release() {
@@ -18,7 +20,7 @@ update_os_release() {
 
     sed -i "$os_release" \
         -e 's|^NAME=.*$|NAME=\"Lunar\"|' \
-        -e 's|^PRETTY_NAME=.*$|PRETTY_NAME=\"Lunar\"|' \
+        -e 's|^PRETTY_NAME=.*$|PRETTY_NAME=\"LunarOs\"|' \
         -e 's|^ID=.*$|ID=lunar|' \
         -e 's|^ID_LIKE=.*$|ID_LIKE=\"arch\"|' \
         -e 's|^ANSI_COLOR=.*$|ANSI_COLOR=\"38;2;124;196;255\"|' \
@@ -37,7 +39,7 @@ update_os_release() {
 update_issues() {
     local f
     for f in /etc/issue /usr/share/factory/etc/issue; do
-        [ -f "$f" ] && sed -i -e 's|Arch Linux|Lunar|g' "$f"
+        [ -f "$f" ] && sed -i -e 's|Arch Linux|LunarOs|g' "$f"
     done
 }
 
