@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Lunar: Remmina tray autostart off
+Exec=/usr/lib/lunar/remmina-autostart-off
+OnlyShowIn=KDE;
+NoDisplay=true
+X-KDE-autostart-phase=1

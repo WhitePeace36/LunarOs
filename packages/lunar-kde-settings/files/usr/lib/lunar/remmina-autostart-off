@@ -1,0 +1,40 @@
+#!/bin/sh
+# Lunar default: Remmina's "Start in tray upon user login" is off. The tray
+# icon itself stays while Remmina runs. Hidden=true makes the session skip the
+# entry, so Remmina is not started at login at all.
+#
+# Remmina has no system-wide setting for this. On every start it checks
+# ~/.config/autostart/remmina-applet.desktop. If the file is missing, Remmina
+# creates it with autostart on. If the file exists, Remmina leaves it alone
+# and shows the checkbox from its Hidden= key. So write it with Hidden=true
+# once per user, before Remmina can run. A file Remmina already made (with
+# autostart on) gets switched off that one time. After that, whatever the
+# user ticks in Remmina is kept.
+
+marker="${XDG_STATE_HOME:-$HOME/.local/state}/lunar/remmina-autostart-off-1"
+[ -e "$marker" ] && exit 0
+
+# Remmina always uses $HOME/.config here, never $XDG_CONFIG_HOME (remmina_icon.c)
+file="$HOME/.config/autostart/remmina-applet.desktop"
+mkdir -p "${file%/*}"
+
+if [ -f "$file" ]; then
+    sed -i -e 's/^Hidden=.*/Hidden=true/' \
+           -e 's/^X-GNOME-Autostart-enabled=.*/X-GNOME-Autostart-enabled=false/' "$file"
+    grep -q '^Hidden=' "$file" || sed -i '/^\[Desktop Entry\]/a Hidden=true' "$file"
+else
+    cat > "$file" <<'DESKTOP'
+[Desktop Entry]
+Version=1.0
+Name=Remmina Applet
+Comment=Connect to remote desktops through the applet menu
+Icon=org.remmina.Remmina
+Exec=remmina -i
+Terminal=false
+Type=Application
+Hidden=true
+X-GNOME-Autostart-enabled=false
+DESKTOP
+fi
+
+mkdir -p "${marker%/*}" && touch "$marker"
