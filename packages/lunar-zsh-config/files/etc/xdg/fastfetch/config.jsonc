@@ -1,0 +1,51 @@
+// Lunar's fastfetch defaults (lunar-zsh-config), for users without their own
+// ~/.config/fastfetch/config.jsonc (that one wins; `fastfetch --gen-config`
+// writes a full one to start from).
+//  - logo: Lunar's moon (fastfetch's built-in "Lunar" logo is Lunar Linux's).
+//    Colours: $1 moon, $2 outline, $3 shadow, $4 craters, as in lunar.svg.
+//  - modules: fastfetch's default list (a config without "modules" shows
+//    only the logo).
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "logo": {
+    "type": "file",
+    "source": "/usr/share/lunar-zsh-config/fetch/lunar-fastfetch.txt",
+    "color": {
+      "1": "#ffffff",
+      "2": "#2f80ed",
+      "3": "#5ea6f6",
+      "4": "#cfe6ff"
+    }
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "localip",
+    "battery",
+    "poweradapter",
+    "locale",
+    "break",
+    "colors"
+  ]
+}

@@ -1,9 +1,9 @@
 # Maintainer: Timon <timon2201@gmail.com>
 
 pkgname=lunar-zsh-config
-pkgver=1.0.0
-pkgrel=7
-pkgdesc='Lunar - zsh configuration (prompt, completion menu, modern CLI aliases)'
+pkgver=1.1.0
+pkgrel=1
+pkgdesc='Lunar - zsh configuration (prompt, completion menu, modern CLI aliases) and the Lunar logo for fastfetch/neofetch'
 arch=('any')
 url='https://github.com/WhitePeace36/LunarOs'
 license=('GPL-2.0-only')
@@ -27,10 +27,21 @@ depends=(
 )
 # CachyOS's zsh config installs the same /etc/skel/.zshrc
 conflicts=('cachyos-zsh-config')
-backup=('etc/skel/.zshrc')
+backup=('etc/skel/.zshrc'
+        'etc/xdg/fastfetch/config.jsonc'
+        'etc/skel/.config/neofetch/config.conf')
 
 package() {
   install -Dm644 "$startdir/files/usr/share/lunar-zsh-config/lunar.zsh" \
     "$pkgdir/usr/share/lunar-zsh-config/lunar.zsh"
   install -Dm644 "$startdir/files/etc/skel/.zshrc" "$pkgdir/etc/skel/.zshrc"
+  # Lunar's moon for fastfetch (system-wide default config) and neofetch
+  # (no system-wide config: new users get ~/.config/neofetch/config.conf)
+  install -Dm644 -t "$pkgdir/usr/share/lunar-zsh-config/fetch" \
+    "$startdir/files/usr/share/lunar-zsh-config/fetch/lunar-fastfetch.txt" \
+    "$startdir/files/usr/share/lunar-zsh-config/fetch/lunar-neofetch.txt"
+  install -Dm644 "$startdir/files/etc/xdg/fastfetch/config.jsonc" \
+    "$pkgdir/etc/xdg/fastfetch/config.jsonc"
+  install -Dm644 "$startdir/files/etc/skel/.config/neofetch/config.conf" \
+    "$pkgdir/etc/skel/.config/neofetch/config.conf"
 }
